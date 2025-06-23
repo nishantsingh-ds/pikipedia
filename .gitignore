@@ -1,0 +1,51 @@
+.env
+__pycache__/
+.DS_Store
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Uploaded files (keep the directory but ignore contents)
+uploaded_images/*
+!uploaded_images/.gitkeep
+
+# Debug files
+debug_upload.png
