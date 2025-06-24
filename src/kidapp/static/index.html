@@ -267,6 +267,11 @@
                         <input type="text" id="interests" name="interests" placeholder="e.g., animals, space, music, art">
                     </div>
 
+                    <div class="form-group">
+                        <label for="image">Upload an Image (optional)</label>
+                        <input type="file" id="image" name="image" accept="image/*">
+                    </div>
+
                     <button type="submit" class="submit-btn" id="submit-btn">
                         🚀 Generate Kid-Friendly Explanation
                     </button>
@@ -345,6 +350,11 @@
             
             const interests = document.getElementById('interests').value;
             if (interests) formData.append('interests', interests);
+
+            const imageInput = document.getElementById('image');
+            if (imageInput && imageInput.files.length > 0) {
+                formData.append('image', imageInput.files[0]);
+            }
             
             try {
                 const response = await fetch('/generate', {
