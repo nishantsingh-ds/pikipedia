@@ -1,5 +1,5 @@
-crewai
-crewai-tools
+crewai==0.126.0
+crewai-tools==0.47.1
 Pillow
 gTTS>=2.3.2
 fastapi>=0.104.0

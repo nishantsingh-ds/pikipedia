@@ -166,12 +166,12 @@ async def generate(
     - An uploaded image (if image is provided)
     - A text topic/question (if topic is provided)
     """
-    # Validate that at least one input is provided
-    if not image and not topic:
+    # Enforce that only one of image or topic is provided
+    if (image and topic) or (not image and not topic):
         return JSONResponse(
             status_code=400,
-            content={"error": "Either 'image' or 'topic' must be provided"}
-        )
+            content={"error": "Please provide either a question or an image, but not both."}
+    )
     
     # 1. Build the inputs dict
     inputs = {}
@@ -197,12 +197,24 @@ async def generate(
         except Exception:
             logger.exception("❌ Failed to open/dump the uploaded image")
 
-        # Analyze image with OpenAI Vision
+        # Analyze image with OpenAI Vision and generate multimodal outputs
         try:
             description = analyze_image_with_openai(fpath)
-            return {"outputs": {"image_description": description}}
+            # Generate diagram and audio for the description
+            dalle_prefix = "Create a simple, colorful diagram for kids that illustrates: "
+            dalle_prompt = dalle_prefix + description[:4000 - len(dalle_prefix)]
+            diagram_url = generate_diagram_with_dalle(dalle_prompt)
+            tts_text = description[:4096]
+            audio_url = generate_audio_with_tts(tts_text)
+            return {
+                "outputs": {
+                    "result": description,
+                    "diagram_url": diagram_url,
+                    "audio_url": audio_url
+                }
+            }
         except Exception as e:
-            logger.exception("❌ OpenAI Vision analysis failed")
+            logger.exception("❌ OpenAI Vision analysis or multimodal generation failed")
             return JSONResponse(
                 status_code=500,
                 content={"error": str(e)}
