@@ -12,5 +12,6 @@ class TaskImageAnalysis(Task):
         if not image_path:
             return {"image_description": "No image provided"}
         
-        # Return the image path for the agent to analyze
+        # Pass the image path to the agent for analysis
+        # The agent will handle the actual OpenAI Vision API call
         return {"image_path": image_path}

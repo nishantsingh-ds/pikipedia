@@ -1,10 +1,12 @@
 from kidapp.agents.image_analyzer import ImageAnalyzer
+from kidapp.agents.guardrails_agent import GuardrailsAgent
 from kidapp.tasks.task_image_analysis import TaskImageAnalysis
 from kidapp.tasks.task_image_present import TaskImagePresenter
 from kidapp.tasks.task_research import TaskResearcher
 from kidapp.tasks.task_validate import TaskValidator
 from kidapp.tasks.task_analogy import TaskAnaloger
 from kidapp.tasks.task_present import TaskPresenter
+from kidapp.tasks.task_guardrails import TaskGuardrails
 
 from crewai import Agent, Crew, Process, Task
 from crewai_tools import SerperDevTool
@@ -52,6 +54,9 @@ class KidSafeAppCrew():
             goal="Present responses in a kid-friendly way. For images: explain what's in the image. For text questions: combine explanation, safety check, and analogy into one clear message.",
             backstory="You're a caring storyteller and educator who knows how to present information to children. For images, you explain what's visible in a fun, engaging way. For text questions, you weave together explanations, safety confirmations, and analogies into a single, seamless reply that feels warm and easy to understand.",
             verbose=True)
+    
+    def guardrails_agent(self) -> Agent:
+        return GuardrailsAgent()
 
     def image_analysis_task(self) -> Task:
         return TaskImageAnalysis(
@@ -98,6 +103,13 @@ class KidSafeAppCrew():
             expected_output="A JSON object with one key, 'result', whose value is a kid-friendly explanation of what's in the image.",
             agent=self.presenter()
         )
+    
+    def guardrails_task(self) -> Task:
+        return TaskGuardrails(
+            description="Validate all generated content for safety and appropriateness for children aged 6-12. Check for violence, hate, adult content, or anything inappropriate.",
+            expected_output="A JSON object with 'guardrails_status': 'safe' or 'unsafe', 'guardrails_message': explanation if unsafe, and 'safe_content' if safe.",
+            agent=self.guardrails_agent()
+        )
 
     def crew(self) -> Crew:
         # Get the inputs to determine the mode
@@ -128,7 +140,8 @@ class KidSafeAppCrew():
                 self.researcher(),
                 self.validator(),
                 self.analoger(),
-                self.presenter()
+                self.presenter(),
+                self.guardrails_agent()
             ],
             tasks=tasks_to_run,
             process=Process.sequential,

@@ -16,6 +16,8 @@ validate_task:
     "notes": if "unsafe", a brief suggestion on what to remove or rephrase; otherwise an empty string.
   agent: validator
 
+  #ethical, non ethical, bias non bias gender,racews, economic background, voilence
+
 analogy_task:
   description: >
     Take the validated, child-friendly explanation of {topic} and craft a single, vivid analogy or mini-story that makes the concept memorable and relatable for kids.

@@ -10,7 +10,10 @@ class TaskImagePresenter(Task):
         image_description = data.get("image_description", "")
         
         # Return the data for the presenter agent to format
+        # Include any additional context like age and interests
         return {
             "image_description": image_description,
-            "mode": "image_analysis"
+            "mode": "image_analysis",
+            "age": data.get("age"),
+            "interests": data.get("interests")
         } 

@@ -3,70 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KidApp - Educational AI for Kids</title>
+    <title>WonderBot - AI Learning Adventure for Kids</title>
+    <meta name="description" content="WonderBot: AI-powered educational explanations, diagrams, and audio for curious kids. Safe, fun, and colorful learning!">
+    <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4A90E2 0%, #FF6B6B 25%, #4ECDC4 50%, #FFD93D 75%, #9B59B6 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             min-height: 100vh;
-            padding: 20px;
+            color: #222;
         }
-
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        a { color: #4ecdc4; text-decoration: none; }
+        a:hover { text-decoration: underline; }
         .container {
             max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
             overflow: hidden;
         }
-
-        .header {
-            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+        .hero {
+            background: linear-gradient(135deg, #4A90E2, #FF6B6B, #4ECDC4);
+            background-size: 200% 200%;
+            animation: heroGradient 8s ease infinite;
             color: white;
-            padding: 30px;
+            padding: 60px 30px 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="90" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes heroGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.12);
+        }
+        .hero p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+        .cta-btn {
+            background: linear-gradient(45deg, #FFD93D, #FF8C42);
+            color: #fff;
+            border: none;
+            padding: 16px 36px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 217, 61, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .cta-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .cta-btn:hover::before {
+            left: 100%;
+        }
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 217, 61, 0.4);
+        }
+        .main-content {
+            padding: 40px 24px 24px 24px;
+        }
+        .section-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 18px;
             text-align: center;
         }
-
-        .header h1 {
-            font-size: 2.5rem;
+        .how-it-works {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .how-step {
+            flex: 1 1 220px;
+            background: linear-gradient(135deg, #f8f9fa, #e3f2fd);
+            border-radius: 15px;
+            padding: 24px 18px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            min-width: 220px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .how-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            border-color: #4A90E2;
+        }
+        .how-step .emoji {
+            font-size: 2.2rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
+        .how-step h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            background: linear-gradient(45deg, #4A90E2, #9B59B6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-
-        .main-content {
-            padding: 40px;
+        .how-step p {
+            font-size: 1rem;
+            color: #555;
         }
-
         .form-section {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa, #fff5f5);
             padding: 30px;
             border-radius: 15px;
             margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 2px solid #FF6B6B;
+            position: relative;
+            overflow: hidden;
         }
-
-        .form-group {
-            margin-bottom: 20px;
+        .form-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4A90E2, #FF6B6B, #4ECDC4, #FFD93D);
         }
-
+        .form-section h2 {
+            text-align: center;
+            margin-bottom: 18px;
+            color: #333;
+        }
+        .form-group { margin-bottom: 20px; }
         .form-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             color: #333;
         }
-
         .form-group input, .form-group textarea {
             width: 100%;
             padding: 12px;
@@ -75,14 +195,14 @@
             font-size: 16px;
             transition: border-color 0.3s;
         }
-
         .form-group input:focus, .form-group textarea:focus {
             outline: none;
             border-color: #4ecdc4;
         }
-
         .submit-btn {
-            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            background: linear-gradient(45deg, #4A90E2, #9B59B6, #FF6B6B);
+            background-size: 200% 200%;
+            animation: buttonGradient 3s ease infinite;
             color: white;
             border: none;
             padding: 15px 30px;
@@ -90,26 +210,43 @@
             font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
             width: 100%;
+            position: relative;
+            overflow: hidden;
         }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
         }
-
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+        .submit-btn:hover { 
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(74, 144, 226, 0.4);
+        }
+        @keyframes buttonGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
         .submit-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
-
         .loading {
             text-align: center;
             padding: 20px;
             color: #666;
         }
-
         .spinner {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #4ecdc4;
@@ -119,55 +256,26 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 10px;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .results {
-            display: none;
-            margin-top: 30px;
-        }
-
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .results { display: none; margin-top: 30px; }
         .result-card {
             background: white;
             border: 2px solid #e9ecef;
             border-radius: 15px;
             padding: 25px;
             margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
         }
-
-        .result-card h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-
-        .text-response {
-            line-height: 1.6;
-            color: #555;
-            font-size: 16px;
-        }
-
-        .diagram-section {
-            text-align: center;
-            margin: 20px 0;
-        }
-
+        .result-card h3 { color: #333; margin-bottom: 15px; font-size: 1.3rem; }
+        .text-response { line-height: 1.6; color: #555; font-size: 16px; }
+        .diagram-section { text-align: center; margin: 20px 0; }
         .diagram-section img {
             max-width: 100%;
             max-height: 400px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.12);
         }
-
-        .audio-section {
-            text-align: center;
-            margin: 20px 0;
-        }
-
+        .audio-section { text-align: center; margin: 20px 0; }
         .audio-player {
             width: 100%;
             max-width: 400px;
@@ -176,7 +284,6 @@
             background: #f8f9fa;
             border: 2px solid #e9ecef;
         }
-
         .error {
             background: #ffe6e6;
             color: #d63031;
@@ -185,7 +292,6 @@
             border-left: 4px solid #d63031;
             margin: 20px 0;
         }
-
         .success {
             background: #e6ffe6;
             color: #00b894;
@@ -194,120 +300,197 @@
             border-left: 4px solid #00b894;
             margin: 20px 0;
         }
-
         .example-topics {
-            background: #e3f2fd;
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 15px;
             margin-top: 20px;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.1);
         }
-
         .example-topics h4 {
-            color: #1976d2;
+            background: linear-gradient(45deg, #4A90E2, #9B59B6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 10px;
+            font-size: 1.1rem;
         }
-
         .example-topics ul {
             list-style: none;
             padding: 0;
         }
-
         .example-topics li {
-            background: white;
+            background: linear-gradient(135deg, #fff, #f8f9fa);
             margin: 5px 0;
-            padding: 8px 15px;
+            padding: 10px 18px;
             border-radius: 20px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            border: 1px solid #e3f2fd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-
-        .example-topics li:hover {
-            background: #f0f8ff;
+        .example-topics li:hover { 
+            background: linear-gradient(135deg, #4A90E2, #9B59B6);
+            color: white;
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
         }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .main-content {
-                padding: 20px;
-            }
-            
-            .form-section {
-                padding: 20px;
-            }
+        .how-to-use, .faq-section, .footer {
+            margin: 40px auto 0 auto;
+            max-width: 800px;
+        }
+        .how-to-use h3, .faq-section h3 {
+            background: linear-gradient(45deg, #4A90E2, #FF6B6B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        .how-to-use ol {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        .faq-section details {
+            background: linear-gradient(135deg, #f8f9fa, #fff5f5);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            padding: 16px 20px;
+            cursor: pointer;
+            border: 1px solid #e3f2fd;
+            transition: all 0.3s ease;
+        }
+        .faq-section details:hover {
+            transform: translateX(3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-color: #4A90E2;
+        }
+        .faq-section summary {
+            font-weight: 600;
+            color: #333;
+        }
+        .footer {
+            background: linear-gradient(135deg, #f8f9fa, #e3f2fd);
+            border-radius: 0 0 20px 20px;
+            padding: 24px 18px;
+            text-align: center;
+            color: #666;
+            font-size: 0.98rem;
+            margin-top: 60px;
+            border-top: 3px solid;
+            border-image: linear-gradient(90deg, #4A90E2, #FF6B6B, #4ECDC4, #FFD93D) 1;
+        }
+        @media (max-width: 900px) {
+            .how-it-works { flex-direction: column; align-items: center; }
+        }
+        @media (max-width: 600px) {
+            .main-content { padding: 16px 4px; }
+            .form-section { padding: 14px; }
+            .hero { padding: 36px 8px 24px 8px; }
+            .section-title { font-size: 1.3rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎓 KidApp</h1>
-            <p>AI-powered educational explanations for curious kids!</p>
+        <div class="hero">
+            <h1>🤖 WonderBot</h1>
+            <p>AI-powered educational explanations, diagrams, and audio for curious kids, parents, and teachers!</p>
+            <button class="cta-btn" onclick="document.getElementById('kidapp-form').scrollIntoView({behavior: 'smooth'})">Start Your Learning Adventure!</button>
         </div>
-
         <div class="main-content">
+            <div class="section-title">How WonderBot Works</div>
+            <div class="how-it-works">
+                <div class="how-step">
+                    <div class="emoji">📝</div>
+                    <h3>Ask or Upload</h3>
+                    <p>Type a question or upload an image. You can also add age and interests for a personalized answer.</p>
+                </div>
+                <div class="how-step">
+                    <div class="emoji">🤖</div>
+                    <h3>AI Agents Collaborate</h3>
+                    <p>Our CrewAI agents research, explain, check for safety, and create analogies just for kids.</p>
+                </div>
+                <div class="how-step">
+                    <div class="emoji">🎨</div>
+                    <h3>Get Multimodal Results</h3>
+                    <p>Receive a kid-friendly explanation, a custom diagram, and an audio version—instantly!</p>
+                </div>
+            </div>
+            <div class="section-title">What Can I Ask?</div>
+            <div class="example-topics">
+                <h4>Popular Topics & Ideas</h4>
+                <ul>
+                    <li onclick="setTopic('Why is the sky blue?')">Why is the sky blue?</li>
+                    <li onclick="setTopic('How do volcanoes erupt?')">How do volcanoes erupt?</li>
+                    <li onclick="setTopic('What is gravity?')">What is gravity?</li>
+                    <li onclick="setTopic('How do fish breathe underwater?')">How do fish breathe underwater?</li>
+                    <li onclick="setTopic('What are black holes?')">What are black holes?</li>
+                    <li onclick="setTopic('How do plants make food?')">How do plants make food?</li>
+                    <li onclick="setTopic('Why do we have seasons?')">Why do we have seasons?</li>
+                    <li onclick="setTopic('What is electricity?')">What is electricity?</li>
+                    <li onclick="setTopic('How do computers work?')">How do computers work?</li>
+                    <li onclick="setTopic('What makes a rainbow?')">What makes a rainbow?</li>
+                </ul>
+                <div style="margin-top: 10px; color: #555; font-size: 0.98rem;">
+                    ...or upload a photo of an animal, plant, or object to get a fun explanation!
+                </div>
+            </div>
+            <div class="section-title" style="margin-top: 40px;">How to Use WonderBot</div>
+            <div class="how-to-use">
+                <h3>Step-by-Step Guide</h3>
+                <ol>
+                    <li>Type a question <b>or</b> upload an image (not both at once).</li>
+                    <li>Optionally, enter the child's age and interests for a tailored answer.</li>
+                    <li>Click <b>"Generate Kid-Friendly Explanation"</b>.</li>
+                    <li>Wait a few moments while our AI agents collaborate.</li>
+                    <li>View your results: text, diagram, and audio!</li>
+                </ol>
+                <div style="color: #666; font-size: 0.97rem; margin-top: 8px;">
+                    <b>Tip:</b> Try different questions, topics, or images for new results every time!
+                </div>
+            </div>
             <div class="form-section">
-                <h2 style="margin-bottom: 20px; color: #333;">Ask a Question</h2>
-                
+                <h2>Ask a Question or Upload an Image</h2>
                 <form id="kidapp-form">
                     <div class="form-group">
-                        <label for="topic">What would you like to learn about? *</label>
+                        <label for="topic">What would you like to learn about?</label>
                         <textarea id="topic" name="topic" rows="3" placeholder="e.g., Why do birds sing? How do plants grow? What makes rainbows?"></textarea>
                     </div>
-
                     <div class="form-group">
                         <label for="age">Child's Age (optional)</label>
                         <input type="number" id="age" name="age" min="3" max="18" placeholder="e.g., 7">
                     </div>
-
                     <div class="form-group">
                         <label for="interests">Interests (optional)</label>
                         <input type="text" id="interests" name="interests" placeholder="e.g., animals, space, music, art">
                     </div>
-
                     <div class="form-group">
                         <label for="image">Upload an Image (optional)</label>
                         <input type="file" id="image" name="image" accept="image/*">
                     </div>
-
                     <button type="submit" class="submit-btn" id="submit-btn">
                         🚀 Generate Kid-Friendly Explanation
                     </button>
                 </form>
-
-                <div class="example-topics">
-                    <h4>💡 Try these example topics:</h4>
-                    <ul>
-                        <li onclick="setTopic('Why do birds sing?')">Why do birds sing?</li>
-                        <li onclick="setTopic('How do plants grow?')">How do plants grow?</li>
-                        <li onclick="setTopic('What makes rainbows?')">What makes rainbows?</li>
-                        <li onclick="setTopic('Why do we dream?')">Why do we dream?</li>
-                        <li onclick="setTopic('How do airplanes fly?')">How do airplanes fly?</li>
-                    </ul>
-                </div>
             </div>
-
             <div id="loading" class="loading" style="display: none;">
                 <div class="spinner"></div>
                 <p>🤖 Our AI agents are working hard to create your explanation...</p>
                 <p style="font-size: 14px; margin-top: 10px;">This may take 30-60 seconds</p>
             </div>
-
             <div id="results" class="results">
                 <div class="result-card">
                     <h3>📚 Explanation</h3>
                     <div id="text-response" class="text-response"></div>
                 </div>
-
                 <div class="result-card">
                     <h3>🎨 Visual Diagram</h3>
                     <div id="diagram-section" class="diagram-section">
                         <p>Loading diagram...</p>
                     </div>
                 </div>
-
                 <div class="result-card">
                     <h3>🔊 Audio Version</h3>
                     <div id="audio-section" class="audio-section">
@@ -315,86 +498,90 @@
                     </div>
                 </div>
             </div>
+            <div class="faq-section">
+                <h3>Frequently Asked Questions</h3>
+                <details>
+                    <summary>Is KidApp safe for children?</summary>
+                    <div>Yes! All content is checked by our AI safety agent to ensure it's age-appropriate and free from harmful or complex language.</div>
+                </details>
+                <details>
+                    <summary>Can I use KidApp as a teacher or parent?</summary>
+                    <div>Absolutely! KidApp is designed for kids, parents, and educators. Use it to spark curiosity, explain tough topics, or create fun learning moments.</div>
+                </details>
+                <details>
+                    <summary>What kinds of images can I upload?</summary>
+                    <div>You can upload photos of animals, objects, plants, or scenes. Please avoid personal photos or anything not suitable for children.</div>
+                </details>
+                <details>
+                    <summary>How long does it take to get results?</summary>
+                    <div>Usually 30-60 seconds. Complex questions or large images may take a bit longer.</div>
+                </details>
+                <details>
+                    <summary>Is my data private?</summary>
+                    <div>We do not store your questions, images, or results. All processing is done securely and privately.</div>
+                </details>
+            </div>
+        </div>
+        <div class="footer">
+            &copy; 2024 WonderBot &mdash; Built with <span style="color:#ff6b6b">&hearts;</span> using CrewAI, OpenAI, and FastAPI.<br>
+            <a href="mailto:hello@wonderbot.ai">Contact</a> &middot; <a href="#">Privacy Policy</a> &middot; <a href="#">Terms</a>
         </div>
     </div>
-
     <script>
         function setTopic(topic) {
             document.getElementById('topic').value = topic;
+            document.getElementById('kidapp-form').scrollIntoView({behavior: 'smooth'});
         }
-
         document.getElementById('kidapp-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-
             const topic = document.getElementById('topic').value.trim();
             const imageInput = document.getElementById('image');
             const hasImage = imageInput && imageInput.files.length > 0;
-
             if ((topic && hasImage) || (!topic && !hasImage)) {
                 showError('Please provide either a question or an image, but not both.');
                 return;
             }
-            
             const submitBtn = document.getElementById('submit-btn');
             const loading = document.getElementById('loading');
             const results = document.getElementById('results');
-            
-            // Show loading, hide results
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Generating...';
             loading.style.display = 'block';
             results.style.display = 'none';
-            
-            // Clear previous results
             document.getElementById('text-response').innerHTML = '';
             document.getElementById('diagram-section').innerHTML = '<p>Loading diagram...</p>';
             document.getElementById('audio-section').innerHTML = '<p>Loading audio...</p>';
-            
-            // Get form data
             const formData = new FormData();
             formData.append('topic', document.getElementById('topic').value);
-            
             const age = document.getElementById('age').value;
             if (age) formData.append('age', age);
-            
             const interests = document.getElementById('interests').value;
             if (interests) formData.append('interests', interests);
-
             if (hasImage) {
                 formData.append('image', imageInput.files[0]);
             }
-            
             try {
                 const response = await fetch('/generate', {
                     method: 'POST',
                     body: formData
                 });
-                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
                 const data = await response.json();
-                
-                // Display results
                 displayResults(data);
-                
             } catch (error) {
                 console.error('Error:', error);
                 showError('Sorry! Something went wrong. Please try again.');
             } finally {
-                // Hide loading, enable button
                 loading.style.display = 'none';
                 submitBtn.disabled = false;
                 submitBtn.textContent = '🚀 Generate Kid-Friendly Explanation';
             }
         });
-        
         function displayResults(data) {
             const results = document.getElementById('results');
             const outputs = data.outputs;
-            
-            // Display text response
             let textContent = '';
             if (outputs.raw) {
                 try {
@@ -408,10 +595,7 @@
             } else {
                 textContent = 'No text response available.';
             }
-            
             document.getElementById('text-response').innerHTML = textContent.replace(/\n/g, '<br>');
-            
-            // Display diagram
             const diagramSection = document.getElementById('diagram-section');
             if (outputs.diagram_url) {
                 const img = document.createElement('img');
@@ -420,6 +604,13 @@
                 img.onload = () => {
                     diagramSection.innerHTML = '';
                     diagramSection.appendChild(img);
+                    // Show error message if there's a diagram error
+                    if (outputs.diagram_error) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.style.cssText = 'margin-top: 10px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; color: #856404; font-size: 14px;';
+                        errorDiv.innerHTML = `⚠️ ${outputs.diagram_error}`;
+                        diagramSection.appendChild(errorDiv);
+                    }
                 };
                 img.onerror = () => {
                     diagramSection.innerHTML = '<p style="color: #666;">❌ Diagram could not be loaded</p>';
@@ -427,8 +618,6 @@
             } else {
                 diagramSection.innerHTML = '<p style="color: #666;">No diagram available</p>';
             }
-            
-            // Display audio
             const audioSection = document.getElementById('audio-section');
             if (outputs.audio_url) {
                 const audio = document.createElement('audio');
@@ -445,12 +634,9 @@
             } else {
                 audioSection.innerHTML = '<p style="color: #666;">No audio available</p>';
             }
-            
-            // Show results
             results.style.display = 'block';
             results.scrollIntoView({ behavior: 'smooth' });
         }
-        
         function showError(message) {
             const results = document.getElementById('results');
             results.innerHTML = `<div class="error">${message}</div>`;
