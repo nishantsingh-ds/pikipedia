@@ -9,7 +9,11 @@ from kidapp.tasks.task_present import TaskPresenter
 from kidapp.tasks.task_guardrails import TaskGuardrails
 
 from crewai import Agent, Crew, Process, Task
-from crewai_tools import SerperDevTool
+try:
+    from crewai_tools import SerperDevTool
+except ImportError:
+    # Fallback for different versions
+    SerperDevTool = None
 from typing import List
 import yaml
 import os
@@ -25,12 +29,16 @@ class KidSafeAppCrew():
         return ImageAnalyzer(verbose=True)
 
     def researcher(self) -> Agent:
+        tools = []
+        if SerperDevTool is not None:
+            tools.append(SerperDevTool())
+        
         return Agent(
             role="Educational Content Researcher",
             goal="Generate a clear, concise, and age-appropriate explanation of the topic.",
             backstory="You're a seasoned researcher with a knack for uncovering the latest developments in topics. Known for your ability to find the most relevant information and present it in a clear, concise, and engaging way that children (ages 6–12) can easily understand.",
             verbose=True,
-            tools=[SerperDevTool()]
+            tools=tools
             )
 
     def validator(self) -> Agent:
