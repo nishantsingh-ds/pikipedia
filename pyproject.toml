@@ -1,38 +1,22 @@
-[project]
-name = "wonderbot"
-version = "0.1.0"
-description = "WonderBot - AI Learning Adventure for Kids using CrewAI"
-authors = [{ name = "Your Name", email = "you@example.com" }]
-requires-python = ">=3.10,<3.14"
-dependencies = [
-    "crewai==0.126.0",
-    "crewai-tools==0.51.1",
-    "transformers>=4.30.0",
-    "torch",
-    "Pillow",
-    "gTTS>=2.3.2",
-    "accelerate>=0.26.0",
-    "fastapi>=0.104.0",
-    "uvicorn[standard]>=0.24.0",
-    "requests>=2.31.0",
-    "python-multipart>=0.0.6",
-    "python-dotenv>=1.0.0",
-    "openai>=1.0.0"
-]
-
-[project.scripts]
-wonderbot = "kidapp.main:run"
-run_crew = "kidapp.main:run"
-train = "kidapp.main:train"
-replay = "kidapp.main:replay"
-test = "kidapp.main:test"
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[project]
+name = "wonderbot"
+version = "1.0.0"
+description = "AI-powered educational web app for kids"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "flask==3.0.0",
+    "crewai",
+    "crewai-tools", 
+    "openai",
+    "python-dotenv",
+    "Pillow",
+    "requests"
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/kidapp"]
-
-[tool.crewai]
-type = "crew"
