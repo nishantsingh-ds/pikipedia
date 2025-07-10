@@ -1,9 +1,9 @@
 [project]
-name = "kidapp"
+name = "wonderbot"
 version = "0.1.0"
-description = "kidapp using crewAI"
+description = "WonderBot - AI Learning Adventure for Kids using CrewAI"
 authors = [{ name = "Your Name", email = "you@example.com" }]
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10,<3.14"
 dependencies = [
     "crewai[tools]>=0.119.0,<1.0.0",
     "transformers>=4.30.0",
@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.scripts]
-kidapp = "kidapp.main:run"
+wonderbot = "kidapp.main:run"
 run_crew = "kidapp.main:run"
 train = "kidapp.main:train"
 replay = "kidapp.main:replay"
