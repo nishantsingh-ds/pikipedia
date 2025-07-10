@@ -10,6 +10,8 @@ readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
     "flask==3.0.0",
+    "fastapi",
+    "uvicorn[standard]",
     "crewai",
     "crewai-tools", 
     "openai",
