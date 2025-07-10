@@ -1,6 +1,6 @@
-# 🚀 KidApp Deployment Guide
+# 🚀 WonderBot Deployment Guide
 
-This guide will help you deploy your KidApp to a public platform so others can access it via a URL.
+This guide will help you deploy your WonderBot to a public platform so others can access it via a URL.
 
 ## 📋 Prerequisites
 
@@ -49,9 +49,9 @@ In your Railway project dashboard:
 3. Click "New" → "Web Service"
 4. Connect your GitHub repository
 5. Configure:
-   - **Name**: `kidapp`
+   - **Name**: `wonderbot`
    - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
+   - **Build Command**: `pip install -e .`
    - **Start Command**: `uvicorn src.kidapp.api:app --host 0.0.0.0 --port $PORT`
 
 #### Step 2: Environment Variables
@@ -88,7 +88,7 @@ Test your app locally first:
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+pip install -e .
 
 # Test locally
 python deploy.py
@@ -136,7 +136,7 @@ Make sure these are set in your deployment platform:
    - Check the Procfile is correct
 
 2. **Dependencies**
-   - Ensure `requirements.txt` includes all dependencies
+   - Ensure `pyproject.toml` includes all dependencies
    - Some platforms have size limits
 
 3. **Environment Variables**
