@@ -11,6 +11,8 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
+from threading import Lock
+
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
@@ -19,7 +21,7 @@ except ImportError:
     pass  # dotenv not available, use system environment variables
 
 from kidapp.crew import KidSafeAppCrew
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 import base64
 
 # ——— Logging setup ———
@@ -147,6 +149,61 @@ def generate_audio_with_tts(text: str) -> str:
         logger.error(f"❌ TTS error: {str(e)}")
         return "https://placehold.co/1s.mp3?text=TTS+Error"
 
+def is_simple_question(topic, image, age, interests):
+    """Detect if the request is a simple Q&A (no image, short topic, no special interests)."""
+    if image:
+        return False
+    if not topic or len(topic.strip()) == 0:
+        return False
+    # Consider it simple if topic is short and no interests/age specified
+    if len(topic) < 120 and (not interests or (isinstance(interests, str) and interests.strip() == "")):
+        return True
+    return False
+
+# In-memory cache for fast path answers
+_fastpath_cache = {}
+_fastpath_cache_lock = Lock()
+
+async def fastpath_llm_response(topic, age):
+    """Call the LLM directly with a kid-friendly, analogy-based prompt, with caching."""
+    cache_key = (topic.strip().lower(), age if age else 7)
+    with _fastpath_cache_lock:
+        if cache_key in _fastpath_cache:
+            return _fastpath_cache[cache_key]
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        return {
+            "text": "Sorry, the system is not configured correctly. Please try again later.",
+            "audio_url": None
+        }
+    client = OpenAI(api_key=openai_api_key)
+    kid_age = age if age else 7
+    system_prompt = (
+        f"You are WonderBot, an educational assistant for kids aged {kid_age}. "
+        f"Always explain things using analogies and simple language appropriate for a {kid_age}-year-old. "
+        "Avoid any unsafe or inappropriate content."
+    )
+    user_prompt = f"Question: {topic}"
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=512,
+            temperature=0.7,
+        )
+        answer = response.choices[0].message.content.strip()
+    except OpenAIError as e:
+        answer = f"Sorry, there was an error generating the answer: {e}"
+    # Generate TTS audio for the answer
+    audio_url = generate_audio_with_tts(answer[:4096])
+    result = {"text": answer, "audio_url": audio_url}
+    with _fastpath_cache_lock:
+        _fastpath_cache[cache_key] = result
+    return result
+
 @app.post("/generate", response_class=JSONResponse)
 async def generate(
     topic: str = Form(None, description="The topic or question to explain (optional if image is provided)"),
@@ -165,6 +222,12 @@ async def generate(
             status_code=400,
             content={"error": "Please provide either a question or an image, but not both."}
     )
+
+    # Fast path: simple Q&A (text only, no image, no interests)
+    if is_simple_question(topic, image, age, interests):
+        logger.info("⚡ Using fast path for simple Q&A (LLM direct call)")
+        result = await fastpath_llm_response(topic, age)
+        return {"outputs": result}
     
     # 1. Build the inputs dict
     inputs = {}
