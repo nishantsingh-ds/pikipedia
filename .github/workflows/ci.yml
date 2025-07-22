@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install judgeval requests
+          pip install git+https://github.com/judgeval/judgeval.git requests
 
       - name: Start backend
         run: |
