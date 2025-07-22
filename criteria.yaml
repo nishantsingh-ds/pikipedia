@@ -2,4 +2,6 @@ criteria:
   - name: kid_friendly
     prompt: "Is this answer appropriate for a 7-year-old? Answer YES or NO."
   - name: uses_analogy
-    prompt: "Does this answer use an analogy or metaphor to explain the concept? Answer YES or NO." 
+    prompt: "Does this answer use an analogy or metaphor to explain the concept? Answer YES or NO."
+  - name: factually_correct
+    prompt: "Is this answer factually correct and not misleading? Answer YES or NO." 
