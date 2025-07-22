@@ -3,6 +3,9 @@ import uuid
 import logging
 import hashlib
 import requests
+import re
+import time
+from collections import OrderedDict
 
 from io import BytesIO
 from PIL import Image
@@ -130,6 +133,17 @@ def generate_audio_with_tts(text: str) -> str:
             logger.error("❌ OPENAI_API_KEY not found in environment")
             return "https://placehold.co/1s.mp3?text=No+API+Key"
         
+        # Sanitize and validate TTS input
+        text = str(text).strip()
+        # Remove potentially harmful characters
+        text = re.sub(r'[^\w\s.,!?-]', '', text)
+        # Limit length to prevent excessive API costs
+        text = text[:2000]
+        
+        if not text:
+            logger.error("❌ Empty text after sanitization")
+            return "https://placehold.co/1s.mp3?text=Empty+Text"
+        
         logger.info(f"🔊 Generating TTS audio for text: {text[:100]}...")
         client = OpenAI(api_key=openai_api_key)
         response = client.audio.speech.create(
@@ -160,16 +174,51 @@ def is_simple_question(topic, image, age, interests):
         return True
     return False
 
-# In-memory cache for fast path answers
-_fastpath_cache = {}
+# In-memory cache for fast path answers with size limit
+
+class LRUCache:
+    def __init__(self, max_size=1000, ttl_seconds=3600):
+        self.max_size = max_size
+        self.ttl_seconds = ttl_seconds
+        self.cache = OrderedDict()
+        self.timestamps = {}
+    
+    def get(self, key):
+        current_time = time.time()
+        if key in self.cache:
+            # Check if entry is expired
+            if current_time - self.timestamps[key] > self.ttl_seconds:
+                del self.cache[key]
+                del self.timestamps[key]
+                return None
+            # Move to end (most recently used)
+            self.cache.move_to_end(key)
+            return self.cache[key]
+        return None
+    
+    def put(self, key, value):
+        current_time = time.time()
+        if key in self.cache:
+            self.cache.move_to_end(key)
+        else:
+            # Remove oldest if at capacity
+            while len(self.cache) >= self.max_size:
+                oldest_key = next(iter(self.cache))
+                del self.cache[oldest_key]
+                del self.timestamps[oldest_key]
+        self.cache[key] = value
+        self.timestamps[key] = current_time
+
+_fastpath_cache = LRUCache(max_size=1000, ttl_seconds=3600)  # 1 hour TTL
 _fastpath_cache_lock = Lock()
 
 async def fastpath_llm_response(topic, age):
     """Call the LLM directly with a kid-friendly, analogy-based prompt, with caching."""
     cache_key = (topic.strip().lower(), age if age else 7)
     with _fastpath_cache_lock:
-        if cache_key in _fastpath_cache:
-            return _fastpath_cache[cache_key]
+        cached_result = _fastpath_cache.get(cache_key)
+        if cached_result is not None:
+            return cached_result
     openai_api_key = os.getenv("OPENAI_API_KEY")
     if not openai_api_key:
         return {
@@ -201,7 +250,7 @@ async def fastpath_llm_response(topic, age):
     audio_url = generate_audio_with_tts(answer[:4096])
     result = {"text": answer, "audio_url": audio_url}
     with _fastpath_cache_lock:
-        _fastpath_cache[cache_key] = result
+        _fastpath_cache.put(cache_key, result)
     return result
 
 @app.post("/generate", response_class=JSONResponse)
@@ -234,9 +283,22 @@ async def generate(
     
     if image:
         # Image analysis mode - use CrewAI workflow
+        # Validate and sanitize file extension to prevent path traversal
         ext = os.path.splitext(image.filename or "")[1] or ".png"
+        # Only allow safe image extensions
+        allowed_extensions = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
+        if ext.lower() not in allowed_extensions:
+            ext = ".png"  # Default to safe extension
+        # Remove any path separators from extension
+        ext = ext.replace("/", "").replace("\\", "").replace("..", "")
         fname = f"{uuid.uuid4().hex}{ext}"
-        fpath = os.path.join(UPLOAD_DIR, fname)
+        # Ensure the file path stays within UPLOAD_DIR
+        fpath = os.path.abspath(os.path.join(UPLOAD_DIR, fname))
+        if not fpath.startswith(os.path.abspath(UPLOAD_DIR)):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Invalid file path"}
+            )
 
         contents = await image.read()
         with open(fpath, "wb") as f:
@@ -277,9 +339,14 @@ async def generate(
             # Extract explanation for multimodal output
             explanation = result.get("result") or result.get("content") or str(result)
             
+            # Sanitize explanation for safe prompt generation
+            # Remove potentially harmful characters and limit length
+            explanation = re.sub(r'[^\w\s.,!?-]', '', str(explanation))
+            explanation = explanation.strip()[:2000]  # Reasonable limit
+            
             # Generate diagram and audio for the image analysis
             dalle_prefix = "Create a simple, colorful diagram for kids that illustrates: "
-            max_explanation_len = 4000 - len(dalle_prefix)
+            max_explanation_len = 2000  # Conservative limit
             dalle_prompt = dalle_prefix + explanation[:max_explanation_len]
             diagram_result = generate_diagram_with_dalle(dalle_prompt)
             
@@ -323,9 +390,15 @@ async def generate(
             logger.info("🔄 Processing result for multimodal output...")
             # Extract explanation for multimodal output
             explanation = result.get("content") or result.get("result") or str(result)
+            
+            # Sanitize explanation for safe prompt generation
+            # Remove potentially harmful characters and limit length
+            explanation = re.sub(r'[^\w\s.,!?-]', '', str(explanation))
+            explanation = explanation.strip()[:2000]  # Reasonable limit
+            
             # Generate diagram and audio
             dalle_prefix = "Create a simple, colorful diagram for kids that illustrates: "
-            max_explanation_len = 4000 - len(dalle_prefix)
+            max_explanation_len = 2000  # Conservative limit
             dalle_prompt = dalle_prefix + explanation[:max_explanation_len]
             diagram_result = generate_diagram_with_dalle(dalle_prompt)
             # Truncate explanation for TTS to 4096 characters
