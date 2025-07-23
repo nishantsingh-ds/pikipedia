@@ -20,8 +20,22 @@ try:
 except ImportError:
     pass  # dotenv not available, use system environment variables
 
-from kidapp.crew import KidSafeAppCrew
-from openai import OpenAI, OpenAIError
+try:
+    from kidapp.crew import KidSafeAppCrew
+except ImportError as e:
+    logger.error(f"❌ Failed to import KidSafeAppCrew: {e}")
+    # Create a fallback crew class
+    class KidSafeAppCrew:
+        def generate(self, **kwargs):
+            return {"text": "Error: CrewAI not properly configured"}
+
+try:
+    from openai import OpenAI, OpenAIError
+except ImportError as e:
+    logger.error(f"❌ Failed to import OpenAI: {e}")
+    OpenAI = None
+    OpenAIError = Exception
+
 import base64
 
 # ——— Logging setup ———
@@ -53,6 +67,17 @@ app.mount("/uploaded_images", StaticFiles(directory=UPLOAD_DIR), name="uploaded_
 # Mount static files for frontend assets
 app.mount("/static", StaticFiles(directory="src/kidapp/static"), name="static")
 
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    return {
+        "status": "healthy",
+        "message": "WonderBot API is running",
+        "openai_configured": bool(os.getenv("OPENAI_API_KEY")),
+        "upload_dir": UPLOAD_DIR
+    }
+
 # Note: Image analysis is now handled by CrewAI agents instead of direct OpenAI calls
 
 def generate_diagram_with_dalle(prompt: str) -> dict:
@@ -64,6 +89,13 @@ def generate_diagram_with_dalle(prompt: str) -> dict:
             return {
                 "diagram_url": "https://placehold.co/400x300?text=No+API+Key",
                 "diagram_error": "API key not configured. Please check your OpenAI API key."
+            }
+        
+        if OpenAI is None:
+            logger.error("❌ OpenAI library not available")
+            return {
+                "diagram_url": "https://placehold.co/400x300?text=OpenAI+Not+Available",
+                "diagram_error": "OpenAI library is not available. Please check your installation."
             }
         
         logger.info(f"🎨 Generating DALL-E diagram with prompt: {prompt[:100]}...")
@@ -128,7 +160,11 @@ def generate_audio_with_tts(text: str) -> str:
         openai_api_key = os.getenv("OPENAI_API_KEY")
         if not openai_api_key:
             logger.error("❌ OPENAI_API_KEY not found in environment")
-            return "https://placehold.co/1s.mp3?text=No+API+Key"
+            return None
+        
+        if OpenAI is None:
+            logger.error("❌ OpenAI library not available")
+            return None
         
         logger.info(f"🔊 Generating TTS audio for text: {text[:100]}...")
         client = OpenAI(api_key=openai_api_key)
@@ -147,7 +183,7 @@ def generate_audio_with_tts(text: str) -> str:
         return audio_url
     except Exception as e:
         logger.error(f"❌ TTS error: {str(e)}")
-        return "https://placehold.co/1s.mp3?text=TTS+Error"
+        return None
 
 def is_simple_question(topic, image, age, interests):
     """Detect if the request is a simple Q&A (no image, short topic, no special interests)."""
@@ -258,10 +294,8 @@ async def generate(
             logger.info("📋 Creating CrewAI instance for image analysis...")
             crew_instance = KidSafeAppCrew()
             crew_instance._inputs = inputs
-            logger.info("🔧 Building crew for image analysis...")
-            crew = crew_instance.crew()
-            logger.info("⚡ Starting crew.kickoff() for image analysis...")
-            result = crew.kickoff(inputs=inputs)
+            logger.info("⚡ Starting crew with error handling for image analysis...")
+            result = crew_instance.kickoff_with_error_handling(inputs)
             logger.info("✅ CrewAI image analysis completed successfully")
             
             # Convert CrewOutput to dict if needed
@@ -307,10 +341,8 @@ async def generate(
             logger.info("📋 Creating CrewAI instance...")
             crew_instance = KidSafeAppCrew()
             crew_instance._inputs = inputs
-            logger.info("🔧 Building crew...")
-            crew = crew_instance.crew()
-            logger.info("⚡ Starting crew.kickoff()...")
-            result = crew.kickoff(inputs=inputs)
+            logger.info("⚡ Starting crew with error handling...")
+            result = crew_instance.kickoff_with_error_handling(inputs)
             logger.info("✅ CrewAI completed successfully")
             # Convert CrewOutput to dict if needed
             if not isinstance(result, dict):

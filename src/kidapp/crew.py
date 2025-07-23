@@ -155,3 +155,25 @@ class KidSafeAppCrew():
             process=Process.sequential,
             verbose=True
         )
+
+    def kickoff_with_error_handling(self, inputs: dict):
+        """Execute the crew with proper error handling for testing"""
+        try:
+            crew = self.crew()
+            result = crew.kickoff(inputs=inputs)
+            
+            # Ensure we return a properly formatted result
+            if hasattr(result, 'output'):
+                return {"text": str(result.output)}
+            elif isinstance(result, dict):
+                return result
+            else:
+                return {"text": str(result)}
+                
+        except Exception as e:
+            error_msg = f"CrewAI execution failed: {str(e)}"
+            print(f"❌ {error_msg}")
+            return {
+                "text": f"I'm sorry, I encountered an error while generating your answer. Please try asking a different question or try again later.",
+                "error": error_msg
+            }

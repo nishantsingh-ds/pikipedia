@@ -9,6 +9,11 @@ on:
 jobs:
   judgeval:
     runs-on: ubuntu-latest
+    
+    # Add environment variables for testing
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      
     steps:
       - uses: actions/checkout@v3
 
@@ -17,29 +22,110 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Check environment variables
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "❌ OPENAI_API_KEY is not set"
+            exit 1
+          else
+            echo "✅ OPENAI_API_KEY is configured"
+          fi
+
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install judgeval requests
+          echo "✅ Dependencies installed successfully"
+
+      - name: Verify installation
+        run: |
+          python -c "import judgeval; print('✅ Judgeval imported successfully')"
+          python -c "import fastapi; print('✅ FastAPI imported successfully')"
+          python -c "import crewai; print('✅ CrewAI imported successfully')"
 
       - name: Start backend
         run: |
+          echo "🚀 Starting backend server..."
           uvicorn src.kidapp.api:app --host 0.0.0.0 --port 8000 &
-          sleep 10  # Wait for server to start
+          SERVER_PID=$!
+          echo "Server PID: $SERVER_PID"
+          
+          # Wait for server to start with better error handling
+          echo "⏳ Waiting for server to start..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+              echo "✅ Server is running!"
+              # Check health endpoint details
+              curl -s http://localhost:8000/health | python3 -c "import sys, json; data=json.load(sys.stdin); print(f'Health: {data.get(\"status\")}, OpenAI: {data.get(\"openai_configured\")}')"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ Server failed to start within 30 seconds"
+              echo "Checking server logs..."
+              ps aux | grep uvicorn
+              exit 1
+            fi
+            echo "Attempt $i/30: Server not ready yet..."
+            sleep 1
+          done
+
+      - name: Test API endpoint
+        run: |
+          echo "🧪 Testing API endpoint..."
+          response=$(curl -s -w "%{http_code}" -X POST "http://localhost:8000/generate" \
+            -F "topic=test question" \
+            -F "age=7")
+          http_code="${response: -3}"
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ API endpoint is working"
+          else
+            echo "❌ API endpoint returned status: $http_code"
+            echo "Response: $response"
+          fi
 
       - name: Generate answers
-        run: python generate_answers.py
+        run: |
+          echo "📝 Generating answers..."
+          python generate_answers.py
+          echo "✅ Answer generation completed"
+
+      - name: Verify generated outputs
+        run: |
+          if [ -f "wonderbot_outputs.csv" ]; then
+            echo "✅ wonderbot_outputs.csv created"
+            echo "Number of answers generated: $(tail -n +2 wonderbot_outputs.csv | wc -l)"
+            echo "Sample output:"
+            head -3 wonderbot_outputs.csv
+          else
+            echo "❌ wonderbot_outputs.csv not found"
+            exit 1
+          fi
 
       - name: Run Judgeval
-        run: judgeval evaluate --input wonderbot_outputs.csv --criteria criteria.yaml --output judgeval_results.csv
+        run: |
+          echo "⚖️ Running Judgeval evaluation..."
+          judgeval evaluate --input wonderbot_outputs.csv --criteria criteria.yaml --output judgeval_results.csv
+          echo "✅ Judgeval completed successfully"
 
       - name: Check Judgeval results
         run: |
-          if grep -q "NO" judgeval_results.csv; then
-            echo "❌ Some answers failed the evaluation!"
-            exit 1
+          if [ -f "judgeval_results.csv" ]; then
+            echo "✅ judgeval_results.csv created"
+            echo "Results summary:"
+            cat judgeval_results.csv
+            
+            if grep -q "NO" judgeval_results.csv; then
+              echo "❌ Some answers failed the evaluation!"
+              echo "Failed criteria details:"
+              grep "NO" judgeval_results.csv
+              exit 1
+            else
+              echo "✅ All answers passed Judgeval evaluation."
+            fi
           else
-            echo "✅ All answers passed Judgeval evaluation."
+            echo "❌ judgeval_results.csv not found"
+            exit 1
           fi
 
       - name: Notify Slack on failure
