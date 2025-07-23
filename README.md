@@ -74,9 +74,6 @@ wonderbot/
 │       └── static/
 │           └── index.html         # Frontend web interface
 ├── uploaded_images/               # Generated diagrams and audio
-├── .github/
-│   └── workflows/
-│       └── ci.yml                 # CI/CD pipeline
 ├── pyproject.toml                 # Project configuration
 ├── requirements.txt               # Python dependencies
 ├── Procfile                      # Deployment configuration
@@ -84,10 +81,7 @@ wonderbot/
 ├── .gitignore                    # Git ignore rules
 ├── README.md                     # This file
 ├── API_DOCUMENTATION.md          # API documentation
-├── DEPLOYMENT.md                 # Deployment guide
-├── criteria.yaml                 # Quality assurance criteria
-├── test_questions.csv            # Test questions for CI/CD
-└── generate_answers.py           # Test data generation script
+└── DEPLOYMENT.md                 # Deployment guide
 ```
 
 ## 🤖 AI Agents Architecture
@@ -154,12 +148,6 @@ curl -X POST "http://localhost:8000/generate" \
 curl -X POST "http://localhost:8000/generate" \
   -F "image=@path/to/image.jpg"
 ```
-
-### CI/CD Testing
-The project includes automated testing via GitHub Actions:
-- Runs quality assurance checks using Judgeval
-- Tests kid-friendliness, analogy usage, and factual correctness
-- Sends notifications to Slack on build status
 
 ## 🔧 Configuration
 
