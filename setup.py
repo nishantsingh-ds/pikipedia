@@ -14,7 +14,7 @@ setup(
         "crewai-tools==0.51.1",
         "openai==1.3.7",
         "python-dotenv==1.0.0",
-        "Pillow==10.1.0",
+        "Pillow==9.5.0",
         "requests==2.31.0"
     ],
     python_requires=">=3.10,<3.14",
