@@ -20,5 +20,8 @@ dependencies = [
     "requests==2.31.0"
 ]
 
+[project.optional-dependencies]
+dev = []
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/kidapp"]
