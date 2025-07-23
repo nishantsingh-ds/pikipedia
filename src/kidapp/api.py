@@ -231,7 +231,7 @@ async def generate(
     
     # 1. Build the inputs dict
     inputs = {}
-    
+
     if image:
         # Image analysis mode - use CrewAI workflow
         ext = os.path.splitext(image.filename or "")[1] or ".png"
@@ -312,6 +312,7 @@ async def generate(
             logger.info("⚡ Starting crew.kickoff()...")
             result = crew.kickoff(inputs=inputs)
             logger.info("✅ CrewAI completed successfully")
+            
             # Convert CrewOutput to dict if needed
             if not isinstance(result, dict):
                 if hasattr(result, 'dict') and callable(getattr(result, 'dict')):
@@ -320,28 +321,33 @@ async def generate(
                     result = dict(result.__dict__)
                 else:
                     result = {"result": str(result)}
+            
             logger.info("🔄 Processing result for multimodal output...")
             # Extract explanation for multimodal output
             explanation = result.get("content") or result.get("result") or str(result)
+            
             # Generate diagram and audio
             dalle_prefix = "Create a simple, colorful diagram for kids that illustrates: "
             max_explanation_len = 4000 - len(dalle_prefix)
             dalle_prompt = dalle_prefix + explanation[:max_explanation_len]
             diagram_result = generate_diagram_with_dalle(dalle_prompt)
+            
             # Truncate explanation for TTS to 4096 characters
             tts_text = explanation[:4096]
             audio_url = generate_audio_with_tts(tts_text)
+            
             result["diagram_url"] = diagram_result["diagram_url"]
             result["diagram_error"] = diagram_result["diagram_error"]
             result["audio_url"] = audio_url
             logger.info("🎉 Multimodal processing completed")
+            
         except Exception as e:
             logger.exception("❌ CrewAI execution or multimodal generation failed")
             return JSONResponse(
                 status_code=500,
                 content={"error": str(e)}
             )
-        return {"outputs": result}
+    return {"outputs": result}
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():

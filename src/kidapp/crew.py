@@ -8,12 +8,17 @@ from kidapp.tasks.task_analogy import TaskAnaloger
 from kidapp.tasks.task_present import TaskPresenter
 from kidapp.tasks.task_guardrails import TaskGuardrails
 
-from crewai import Agent, Crew, Process, Task
 try:
+    from crewai import Agent, Crew, Process, Task
     from crewai_tools import SerperDevTool
+    # Add any other imports or code that should be inside the try block here
 except ImportError:
-    # Fallback for different versions
+    # Handle the import error here (e.g., set SerperDevTool = None or log a warning)
     SerperDevTool = None
+    Agent = None
+    Crew = None
+    Process = None
+    Task = None
 from typing import List
 import yaml
 import os
@@ -62,7 +67,7 @@ class KidSafeAppCrew():
             goal="Present responses in a kid-friendly way. For images: explain what's in the image. For text questions: combine explanation, safety check, and analogy into one clear message.",
             backstory="You're a caring storyteller and educator who knows how to present information to children. For images, you explain what's visible in a fun, engaging way. For text questions, you weave together explanations, safety confirmations, and analogies into a single, seamless reply that feels warm and easy to understand.",
             verbose=True)
-    
+
     def guardrails_agent(self) -> Agent:
         return GuardrailsAgent()
 
