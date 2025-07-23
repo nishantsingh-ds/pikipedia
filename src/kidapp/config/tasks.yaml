@@ -1,0 +1,43 @@
+research_task:
+  description: >
+    Take the user's {topic} (any question or subject they enter) and generate a first-pass, kid-friendly explanation. 
+    If an image was uploaded, also consider the image description: {image_description}.
+    Ensure it's accurate, clear, and engaging for children aged 6–12.
+  expected_output: >
+    A JSON object with one key, "content", whose value is the simplified explanation text for {topic}.
+  agent: researcher
+
+validate_task:
+  description: >
+    Review the explanation generated for {topic} to verify it's safe and age-appropriate for children (ages 6–12). Flag any violent, mature, or confusing language and suggest simpler wording if necessary.
+  expected_output: >
+    A JSON object with two keys:
+    "status": either "safe" or "unsafe"
+    "notes": if "unsafe", a brief suggestion on what to remove or rephrase; otherwise an empty string.
+  agent: validator
+
+  #ethical, non ethical, bias non bias gender,racews, economic background, voilence
+
+analogy_task:
+  description: >
+    Take the validated, child-friendly explanation of {topic} and craft a single, vivid analogy or mini-story that makes the concept memorable and relatable for kids.
+  expected_output: >
+    A JSON object with one key, "analogy", whose value is the analogy or story text.
+  agent: analoger
+
+present_task:
+  description: >
+    Gather the explanation (`content`), safety check (`status` + `notes`), and analogy
+    for {topic}, then format them into one cohesive, child-friendly response.
+    If an image was provided, include the image description: {image_description}.
+  expected_output: >
+    A JSON object with one key, `"result"`, whose value is the complete formatted
+    reply—containing the explanation, a brief reassurance of safety, and the analogy.
+  agent: presenter
+
+image_analysis_task:
+  description: >
+    Take the path of a user-uploaded image and output a brief description.
+  expected_output: >
+    A JSON object with key `"image_description"` whose value is the text description.
+  agent: image_analyzer

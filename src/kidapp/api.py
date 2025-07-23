@@ -11,8 +11,6 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from threading import Lock
-
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
@@ -21,7 +19,7 @@ except ImportError:
     pass  # dotenv not available, use system environment variables
 
 from kidapp.crew import KidSafeAppCrew
-from openai import OpenAI, OpenAIError
+from openai import OpenAI
 import base64
 
 # ——— Logging setup ———
@@ -149,61 +147,6 @@ def generate_audio_with_tts(text: str) -> str:
         logger.error(f"❌ TTS error: {str(e)}")
         return "https://placehold.co/1s.mp3?text=TTS+Error"
 
-def is_simple_question(topic, image, age, interests):
-    """Detect if the request is a simple Q&A (no image, short topic, no special interests)."""
-    if image:
-        return False
-    if not topic or len(topic.strip()) == 0:
-        return False
-    # Consider it simple if topic is short and no interests/age specified
-    if len(topic) < 120 and (not interests or (isinstance(interests, str) and interests.strip() == "")):
-        return True
-    return False
-
-# In-memory cache for fast path answers
-_fastpath_cache = {}
-_fastpath_cache_lock = Lock()
-
-async def fastpath_llm_response(topic, age):
-    """Call the LLM directly with a kid-friendly, analogy-based prompt, with caching."""
-    cache_key = (topic.strip().lower(), age if age else 7)
-    with _fastpath_cache_lock:
-        if cache_key in _fastpath_cache:
-            return _fastpath_cache[cache_key]
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    if not openai_api_key:
-        return {
-            "text": "Sorry, the system is not configured correctly. Please try again later.",
-            "audio_url": None
-        }
-    client = OpenAI(api_key=openai_api_key)
-    kid_age = age if age else 7
-    system_prompt = (
-        f"You are WonderBot, an educational assistant for kids aged {kid_age}. "
-        f"Always explain things using analogies and simple language appropriate for a {kid_age}-year-old. "
-        "Avoid any unsafe or inappropriate content."
-    )
-    user_prompt = f"Question: {topic}"
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            max_tokens=512,
-            temperature=0.7,
-        )
-        answer = response.choices[0].message.content.strip()
-    except OpenAIError as e:
-        answer = f"Sorry, there was an error generating the answer: {e}"
-    # Generate TTS audio for the answer
-    audio_url = generate_audio_with_tts(answer[:4096])
-    result = {"text": answer, "audio_url": audio_url}
-    with _fastpath_cache_lock:
-        _fastpath_cache[cache_key] = result
-    return result
-
 @app.post("/generate", response_class=JSONResponse)
 async def generate(
     topic: str = Form(None, description="The topic or question to explain (optional if image is provided)"),
@@ -222,16 +165,10 @@ async def generate(
             status_code=400,
             content={"error": "Please provide either a question or an image, but not both."}
     )
-
-    # Fast path: simple Q&A (text only, no image, no interests)
-    if is_simple_question(topic, image, age, interests):
-        logger.info("⚡ Using fast path for simple Q&A (LLM direct call)")
-        result = await fastpath_llm_response(topic, age)
-        return {"outputs": result}
     
     # 1. Build the inputs dict
     inputs = {}
-
+    
     if image:
         # Image analysis mode - use CrewAI workflow
         ext = os.path.splitext(image.filename or "")[1] or ".png"
@@ -312,7 +249,6 @@ async def generate(
             logger.info("⚡ Starting crew.kickoff()...")
             result = crew.kickoff(inputs=inputs)
             logger.info("✅ CrewAI completed successfully")
-            
             # Convert CrewOutput to dict if needed
             if not isinstance(result, dict):
                 if hasattr(result, 'dict') and callable(getattr(result, 'dict')):
@@ -321,33 +257,28 @@ async def generate(
                     result = dict(result.__dict__)
                 else:
                     result = {"result": str(result)}
-            
             logger.info("🔄 Processing result for multimodal output...")
             # Extract explanation for multimodal output
             explanation = result.get("content") or result.get("result") or str(result)
-            
             # Generate diagram and audio
             dalle_prefix = "Create a simple, colorful diagram for kids that illustrates: "
             max_explanation_len = 4000 - len(dalle_prefix)
             dalle_prompt = dalle_prefix + explanation[:max_explanation_len]
             diagram_result = generate_diagram_with_dalle(dalle_prompt)
-            
             # Truncate explanation for TTS to 4096 characters
             tts_text = explanation[:4096]
             audio_url = generate_audio_with_tts(tts_text)
-            
             result["diagram_url"] = diagram_result["diagram_url"]
             result["diagram_error"] = diagram_result["diagram_error"]
             result["audio_url"] = audio_url
             logger.info("🎉 Multimodal processing completed")
-            
         except Exception as e:
             logger.exception("❌ CrewAI execution or multimodal generation failed")
             return JSONResponse(
                 status_code=500,
                 content={"error": str(e)}
             )
-    return {"outputs": result}
+        return {"outputs": result}
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
