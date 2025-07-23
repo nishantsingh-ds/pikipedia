@@ -1,197 +1,210 @@
-# 🤖 WonderBot - AI Learning Adventure for Kids
+# WonderBot - AI-Powered Educational Web App for Kids
 
-WonderBot is an AI-powered educational platform that generates kid-friendly explanations, diagrams, and audio for any topic or image. Built with CrewAI, OpenAI, and FastAPI, WonderBot is designed for curious kids, parents, and teachers who want safe, engaging, and multimodal learning experiences.
+WonderBot is an intelligent educational application that uses AI agents to explain topics and analyze images in a kid-friendly way. Built with FastAPI, CrewAI, and OpenAI, it provides multimodal responses including text explanations, visual diagrams, and audio narration.
 
----
+## 🌟 Features
 
-## ✨ Features
-
-- **🤖 Multi-Agent AI Pipeline**: CrewAI agents for research, safety validation, analogy generation, and presentation
-- **📚 Kid-Friendly Explanations**: Age-appropriate, engaging content tailored to children
-- **🎨 Visual Diagrams**: DALL-E generated illustrations to enhance learning
-- **🔊 Audio Narration**: Text-to-speech audio versions for accessibility
-- **🖼️ Image Analysis**: Upload an image and get a fun, educational explanation
-- **🛡️ Built-in Guardrails**: Content safety checks for violence, hate, adult, and inappropriate material
-- **🌈 Beautiful Web Interface**: Modern, responsive, and colorful frontend
-- **🎯 Personalized Learning**: Customize by age and interests
-
----
+- **Multi-Agent AI Collaboration**: Uses CrewAI agents (Researcher, Validator, Analogy, Presenter) for comprehensive explanations
+- **Image Analysis**: Upload images and get kid-friendly explanations using OpenAI's GPT-4 Vision
+- **Text Q&A**: Ask questions and receive age-appropriate answers
+- **Multimodal Output**: Get text explanations, visual diagrams (DALL-E), and audio narration (TTS)
+- **Content Safety**: Built-in guardrails ensure all content is safe and appropriate for children
+- **Personalization**: Specify age and interests for tailored explanations
+- **Fast Path**: Quick responses for simple questions to reduce latency
+- **Caching**: In-memory caching for improved performance
 
 ## 🚀 Quick Start
 
-### 1. Setup Environment
+### Prerequisites
+- Python 3.10-3.13
+- OpenAI API key
 
-```bash
-# Clone the repository
-https://github.com/your-username/wonderbot.git
-cd wonderbot
+### Installation
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd wonderbot
+   ```
 
-# Install dependencies
-pip install -r requirements.txt
-```
+2. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 2. Configure API Keys
+3. **Set up environment variables**
+   Create a `.env` file in the root directory:
+   ```env
+   OPENAI_API_KEY=your_openai_api_key_here
+   ```
 
-Create a `.env` file in the root directory:
+4. **Run the application**
+   ```bash
+   uvicorn src.kidapp.api:app --reload --host 0.0.0.0 --port 8000
+   ```
 
-```
-OPENAI_API_KEY=your_openai_api_key_here
-```
+5. **Access the application**
+   - Web interface: http://localhost:8000
+   - API documentation: http://localhost:8000/docs
 
-### 3. Start the Server
-
-```bash
-uvicorn src.kidapp.api:app --host 0.0.0.0 --port 8000
-```
-
-### 4. Access the Frontend
-
-Open your browser and go to: **http://localhost:8000**
-
----
-
-## 🌐 Deployment
-
-See [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md) for full instructions.
-
-- **Railway** (Recommended, Free): Deploy from GitHub, set `OPENAI_API_KEY`, and share your public URL.
-- **Render**: Free tier, similar process.
-- **Heroku**: Paid, but reliable.
-- **ngrok**: For quick local sharing.
-
----
-
-## 📚 How to Use
-
-### Web Interface
-1. **Visit the frontend**: Go to your deployed URL or `http://localhost:8000`
-2. **Enter a topic**: Ask any educational question (e.g., "Why do birds sing?")
-3. **Or upload an image**: Get a fun, kid-friendly explanation of what's in the picture
-4. **Customize** (optional): Add age and interests for personalized content
-5. **Generate**: Click the button and wait for the AI to create your explanation
-6. **Enjoy**: Read the explanation, view the diagram, and listen to the audio!
-
-### API Endpoint
-See [`API_DOCUMENTATION.md`](API_DOCUMENTATION.md) for full details.
-
-**Example:**
-```bash
-curl -X POST "https://your-app-name.railway.app/generate" \
-  -F "topic=Why do birds sing?" \
-  -F "age=7" \
-  -F "interests=nature,music"
-```
-
----
-
-## 🏗️ Architecture
-
-### CrewAI Agents
-1. **Educational Content Researcher**: Gathers accurate, age-appropriate information
-2. **Content Safety Validator**: Ensures content is safe and appropriate for children
-3. **Kid-Friendly Analogy Generator**: Creates memorable analogies and stories
-4. **Final Response Presenter**: Combines everything into a cohesive explanation
-5. **Guardrails Agent**: Built-in safety checks for violence, hate, adult, and inappropriate content
-
-### Multimodal Output
-- **Text**: Comprehensive, kid-friendly explanation
-- **Image**: DALL-E generated educational diagram (with error handling)
-- **Audio**: OpenAI TTS narration of the explanation
-
----
-
-## 🛡️ Safety & Guardrails
-
-WonderBot uses CrewAI's built-in guardrails and a dedicated Guardrails Agent to:
-- Block or sanitize any content that is violent, hateful, adult, or otherwise inappropriate for children
-- Scan all generated text, image prompts, and analogies
-- Provide safe alternatives or friendly error messages if content is blocked
-- Handle DALL-E errors gracefully with user-friendly feedback
-
----
-
-## 📁 Project Structure
+## 🏗️ Project Structure
 
 ```
 wonderbot/
-├── src/kidapp/
-│   ├── api.py              # FastAPI server with endpoints
-│   ├── crew.py             # CrewAI pipeline configuration
-│   ├── agents/             # Individual AI agents (including guardrails)
-│   ├── tasks/              # Agent tasks and workflows
-│   ├── static/             # Frontend assets (index.html)
-│   └── config/             # Configuration files (YAML)
-├── uploaded_images/        # Generated diagrams and audio
-├── requirements.txt        # Python dependencies
-├── runtime.txt             # Python version
-├── Procfile                # Deployment config (Heroku)
-├── DEPLOYMENT_GUIDE.md     # Deployment instructions
-├── API_DOCUMENTATION.md    # API usage and examples
-└── README.md               # This file
+├── src/
+│   └── kidapp/
+│       ├── __init__.py
+│       ├── api.py                 # Main FastAPI application
+│       ├── crew.py                # CrewAI agents and tasks
+│       ├── agents/
+│       │   ├── __init__.py
+│       │   ├── image_analyzer.py  # Image analysis agent
+│       │   └── guardrails_agent.py # Content safety agent
+│       ├── tasks/
+│       │   ├── __init__.py
+│       │   ├── task_analogy.py    # Analogy generation task
+│       │   ├── task_image_analysis.py # Image analysis task
+│       │   ├── task_present.py    # Presentation task
+│       │   ├── task_research.py   # Research task
+│       │   ├── task_validate.py   # Validation task
+│       │   ├── task_image_present.py # Image presentation task
+│       │   └── task_guardrails.py # Safety validation task
+│       ├── tools/
+│       │   └── __init__.py
+│       └── static/
+│           └── index.html         # Frontend web interface
+├── uploaded_images/               # Generated diagrams and audio
+├── .github/
+│   └── workflows/
+│       └── ci.yml                 # CI/CD pipeline
+├── pyproject.toml                 # Project configuration
+├── requirements.txt               # Python dependencies
+├── Procfile                      # Deployment configuration
+├── runtime.txt                   # Python version specification
+├── .gitignore                    # Git ignore rules
+├── README.md                     # This file
+├── API_DOCUMENTATION.md          # API documentation
+├── DEPLOYMENT.md                 # Deployment guide
+├── criteria.yaml                 # Quality assurance criteria
+├── test_questions.csv            # Test questions for CI/CD
+└── generate_answers.py           # Test data generation script
 ```
 
+## 🤖 AI Agents Architecture
+
+### CrewAI Agents
+1. **Image Analyzer**: Analyzes uploaded images using OpenAI GPT-4 Vision
+2. **Researcher**: Gathers information and facts about topics
+3. **Validator**: Ensures factual accuracy and appropriateness
+4. **Analogy Agent**: Creates relatable analogies for kids
+5. **Presenter**: Formats content for optimal kid-friendly delivery
+6. **Guardrails Agent**: Ensures content safety and moderation
+
+### Workflow
+1. **Input Processing**: Determines if input is image or text
+2. **Fast Path Check**: For simple text questions, uses direct LLM call
+3. **CrewAI Pipeline**: For complex requests, orchestrates multiple agents
+4. **Multimodal Generation**: Creates text, diagrams, and audio
+5. **Safety Validation**: Ensures all content is kid-appropriate
+
+## 📡 API Endpoints
+
+### POST `/generate`
+Main endpoint for generating explanations.
+
+**Parameters:**
+- `topic` (optional): Text question or topic
+- `image` (optional): Uploaded image file
+- `age` (optional): Child's age for personalization
+- `interests` (optional): Comma-separated interests
+
+**Response:**
+```json
+{
+  "outputs": {
+    "result": "Kid-friendly explanation",
+    "diagram_url": "/uploaded_images/diagram_xxx.png",
+    "audio_url": "/uploaded_images/audio_xxx.mp3"
+  }
+}
+```
+
+### GET `/`
+Serves the web interface.
+
+## 🚀 Deployment
+
+### Render Deployment
+1. Connect your GitHub repository to Render
+2. Create a new Web Service
+3. Set build command: `pip install -r requirements.txt`
+4. Set start command: `uvicorn src.kidapp.api:app --host 0.0.0.0 --port $PORT`
+5. Add environment variable: `OPENAI_API_KEY`
+
+## 🧪 Testing
+
+### Local Testing
+```bash
+# Test the API
+curl -X POST "http://localhost:8000/generate" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "topic=Why do birds sing?"
+
+# Test with image
+curl -X POST "http://localhost:8000/generate" \
+  -F "image=@path/to/image.jpg"
+```
+
+### CI/CD Testing
+The project includes automated testing via GitHub Actions:
+- Runs quality assurance checks using Judgeval
+- Tests kid-friendliness, analogy usage, and factual correctness
+- Sends notifications to Slack on build status
+
+## 🔧 Configuration
+
+### Environment Variables
+- `OPENAI_API_KEY`: Required for AI functionality
+- `PORT`: Port for the web server (set by deployment platform)
+
+### Customization
+- Modify agent roles in `src/kidapp/crew.py`
+- Adjust safety patterns in `src/kidapp/agents/guardrails_agent.py`
+- Update frontend styling in `src/kidapp/static/index.html`
+
+## 🛡️ Safety Features
+
+- **Content Moderation**: Automatic filtering of inappropriate content
+- **Age-Appropriate Language**: Tailored explanations for different age groups
+- **Factual Validation**: Ensures accuracy of information
+- **Safe Image Generation**: DALL-E prompts designed for kid-friendly content
+
+## 📊 Performance
+
+- **Fast Path**: Simple questions answered in <2 seconds
+- **Caching**: In-memory cache for repeated queries
+- **Async Processing**: Non-blocking API responses
+- **Optimized Dependencies**: Minimal, focused dependency tree
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For issues and questions:
+- Check the API documentation in `API_DOCUMENTATION.md`
+- Review deployment guide in `DEPLOYMENT.md`
+- Open an issue on GitHub
+
 ---
 
-## 🎨 Example Topics
-
-Try these fun questions:
-- "Why do birds sing?"
-- "How do plants grow?"
-- "What makes rainbows?"
-- "Why do we dream?"
-- "How do airplanes fly?"
-- "What causes thunder?"
-- "How do bees make honey?"
-- Or upload a photo of an animal, plant, or object!
-
----
-
-## 🔧 Development & Customization
-
-- **Add new agents**: Place in `src/kidapp/agents/`
-- **Add new tasks**: Place in `src/kidapp/tasks/`
-- **Edit frontend**: Modify `src/kidapp/static/index.html`
-- **Change config**: Edit YAML files in `src/kidapp/config/`
-
-### Testing
-- Use the `/docs` endpoint for interactive API testing
-- Use `curl` or Postman for API requests
-
----
-
-## 🛠️ Troubleshooting
-
-- **Build Fails**: Check `requirements.txt` and Python version
-- **API Key Error**: Ensure `OPENAI_API_KEY` is set and valid
-- **Import Errors**: Check file paths and GitHub commits
-- **DALL-E/Image Errors**: User-friendly messages are shown in the UI
-- **Quota Exceeded**: Check your OpenAI usage and billing
-
----
-
-## 📞 Support
-
-- Check the deployment logs for errors
-- Review the [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) and [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
-- For further help, open an issue or contact the maintainer
-
----
-
-## 🎉 Success!
-
-Once deployed, WonderBot is accessible to anyone with the URL!
-
-- ✅ Kid-friendly AI explanations
-- ✅ DALL-E generated diagrams
-- ✅ Text-to-speech audio
-- ✅ Image analysis
-- ✅ Built-in guardrails for safety
-- ✅ Beautiful, responsive web interface
-
----
-
-**WonderBot: Making learning magical, safe, and fun for every child!**
+**WonderBot** - Making learning fun and accessible for every child! 🎓✨

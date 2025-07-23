@@ -1,100 +1,129 @@
-# 🤖 WonderBot API Documentation
+# WonderBot API Documentation
 
 ## Overview
-WonderBot is an AI-powered educational platform that generates kid-friendly explanations, diagrams, and audio for any topic or image.
+
+WonderBot is an AI-powered educational web application that provides kid-friendly explanations for topics and images. This API allows you to interact with the WonderBot system programmatically.
 
 ## Base URL
+
+For deployed applications:
 ```
-https://your-app-name.railway.app
+https://your-app-name.onrender.com
 ```
+
+For local development:
+```
+http://localhost:8000
+```
+
+## Authentication
+
+Currently, no authentication is required. However, you need to set the `OPENAI_API_KEY` environment variable for the application to function.
 
 ## Endpoints
 
-### POST /generate
-Generate educational content for kids.
+### 1. Generate Explanation
 
-#### Request Parameters
-- `topic` (string, optional): Educational question or topic
-- `image` (file, optional): Image to analyze
-- `age` (integer, optional): Child's age (3-18)
-- `interests` (string, optional): Comma-separated interests
+**Endpoint:** `POST /generate`
 
-**Note**: Provide either `topic` OR `image`, not both.
+**Description:** Generate a kid-friendly explanation for either a text topic or an uploaded image.
 
-#### Example Requests
+**Request Format:** `multipart/form-data`
 
-**Text Question:**
+**Parameters:**
+- `topic` (optional, string): The text question or topic to explain
+- `image` (optional, file): An image file to analyze and explain
+- `age` (optional, integer): The child's age for personalized content
+- `interests` (optional, string): Comma-separated list of interests
+
+**Example Request (Text):**
 ```bash
-curl -X POST "https://your-app-name.railway.app/generate" \
-  -F "topic=Why do birds sing?" \
-  -F "age=7" \
-  -F "interests=nature,music"
+curl -X POST "https://your-app-name.onrender.com/generate" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "topic=Why do birds sing?&age=7&interests=nature,music"
 ```
 
-**Image Analysis:**
+**Example Request (Image):**
 ```bash
-curl -X POST "https://your-app-name.railway.app/generate" \
+curl -X POST "https://your-app-name.onrender.com/generate" \
   -F "image=@path/to/image.jpg" \
   -F "age=8" \
-  -F "interests=animals"
+  -F "interests=animals,science"
 ```
 
-#### Response Format
+**Response Format:**
 ```json
 {
   "outputs": {
-    "result": "Kid-friendly explanation with analogy...",
-    "diagram_url": "/uploaded_images/diagram_abc123.png",
-    "diagram_error": null,
-    "audio_url": "/uploaded_images/audio_xyz789.mp3"
+    "result": "Kid-friendly explanation text",
+    "diagram_url": "/uploaded_images/diagram_xxx.png",
+    "audio_url": "/uploaded_images/audio_xxx.mp3"
   }
 }
 ```
 
-#### Response Fields
-- `result`: Kid-friendly text explanation
-- `diagram_url`: URL to generated educational diagram
-- `diagram_error`: Error message if diagram generation failed
-- `audio_url`: URL to text-to-speech audio version
+### 2. Web Interface
 
-## Web Interface
-Visit the base URL to access the user-friendly web interface:
-```
-https://your-app-name.railway.app
-```
+**Endpoint:** `GET /`
+
+**Description:** Serves the web interface for WonderBot.
+
+**Response:** HTML page with the WonderBot interface.
+
+### 3. API Documentation
+
+**Endpoint:** `GET /docs`
+
+**Description:** Interactive API documentation (Swagger UI).
 
 ## Features
-- ✅ **AI-powered explanations** using CrewAI agents
-- ✅ **DALL-E generated diagrams** for visual learning
-- ✅ **Text-to-speech audio** for accessibility
-- ✅ **Image analysis** for uploaded photos
-- ✅ **Built-in safety guardrails** for kid-friendly content
-- ✅ **Age and interest personalization**
+
+### Multi-Modal Output
+- **Text**: Comprehensive, age-appropriate explanations
+- **Visual Diagrams**: DALL-E generated educational illustrations
+- **Audio**: Text-to-speech narration of explanations
+
+### Content Safety
+- Built-in guardrails ensure all content is kid-appropriate
+- Automatic filtering of inappropriate content
+- Age-appropriate language and explanations
+
+### Personalization
+- Age-based content customization
+- Interest-based topic selection
+- Adaptive explanation complexity
 
 ## Error Handling
-- **400 Bad Request**: Invalid input (e.g., both topic and image provided)
-- **500 Internal Server Error**: API or OpenAI service issues
-- **429 Rate Limit**: OpenAI quota exceeded
 
-## Example Topics to Try
-- "Why do birds sing?"
-- "How do plants grow?"
-- "What makes rainbows?"
-- "Why do we dream?"
-- "How do airplanes fly?"
-- "What causes thunder?"
-- "How do bees make honey?"
+### Common Error Responses
 
-## Security Features
-- Content safety validation
-- Age-appropriate filtering
-- Violence and inappropriate content blocking
-- Safe alternatives for blocked content
+**400 Bad Request:**
+```json
+{
+  "error": "Please provide either a question or an image, but not both."
+}
+```
+
+**500 Internal Server Error:**
+```json
+{
+  "error": "Error message describing the issue"
+}
+```
 
 ## Rate Limits
-- Depends on your OpenAI API plan
-- Free tier: ~3 requests per minute
-- Paid plans: Higher limits available
+
+Currently, no rate limits are enforced. However, please be mindful of API usage to ensure fair access for all users.
+
+## Security Notes
+
+- All content is filtered for kid-appropriate material
+- No user data is stored permanently
+- Generated images and audio are temporary and may be cleaned up
 
 ## Support
-For issues or questions, check the deployment logs or contact the developer. 
+
+For API-related issues or questions:
+- Check the interactive documentation at `/docs`
+- Review the deployment guide in `DEPLOYMENT.md`
+- Open an issue on the project's GitHub repository 
