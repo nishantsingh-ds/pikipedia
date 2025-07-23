@@ -3,6 +3,8 @@ import uuid
 import logging
 import hashlib
 import requests
+import json
+from functools import lru_cache
 
 from io import BytesIO
 from PIL import Image
@@ -50,6 +52,70 @@ app.mount("/uploaded_images", StaticFiles(directory=UPLOAD_DIR), name="uploaded_
 
 # Mount static files for frontend assets
 app.mount("/static", StaticFiles(directory="src/kidapp/static"), name="static")
+
+# Simple cache for fast path responses
+response_cache = {}
+
+def is_simple_question(topic: str) -> bool:
+    """Check if the question is simple enough for fast path."""
+    simple_keywords = [
+        "what is", "what are", "how do", "why do", "what makes", 
+        "what causes", "how does", "why does", "what does"
+    ]
+    topic_lower = topic.lower()
+    return any(keyword in topic_lower for keyword in simple_keywords)
+
+def fast_path_response(topic: str, age: int = None, interests: str = None) -> dict:
+    """Generate a quick response for simple questions using direct OpenAI call."""
+    try:
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            return {"error": "OpenAI API key not configured"}
+        
+        client = OpenAI(api_key=openai_api_key)
+        
+        # Create a simple, direct prompt
+        age_context = f" for a {age}-year-old child" if age else " for children aged 6-12"
+        interests_context = f" who loves {interests}" if interests else ""
+        
+        prompt = f"""You are a friendly teacher explaining things to kids. 
+        Explain this topic in a simple, fun way{age_context}{interests_context}:
+        
+        {topic}
+        
+        Keep it short (2-3 sentences), friendly, and easy to understand. 
+        Use simple words and maybe a fun example."""
+        
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=150,
+            temperature=0.7
+        )
+        
+        content = response.choices[0].message.content.strip()
+        
+        # Clean up any JSON formatting if present
+        if content.startswith('{"') or content.startswith('{'):
+            try:
+                parsed = json.loads(content)
+                if 'result' in parsed:
+                    content = parsed['result']
+                elif 'content' in parsed:
+                    content = parsed['content']
+            except:
+                pass
+        
+        return {
+            "result": content,
+            "diagram_url": None,
+            "audio_url": None,
+            "fast_path": True
+        }
+        
+    except Exception as e:
+        logger.error(f"Fast path failed: {e}")
+        return None
 
 # Note: Image analysis is now handled by CrewAI agents instead of direct OpenAI calls
 
@@ -101,32 +167,36 @@ def generate_diagram_with_dalle(prompt: str) -> dict:
                     "diagram_error": None
                 }
             else:
-                logger.error(f"❌ Failed to download DALL-E image: HTTP {img_response.status_code}")
+                logger.error(f"❌ Failed to download DALL-E image: {img_response.status_code}")
                 return {
                     "diagram_url": "https://placehold.co/400x300?text=Download+Failed",
-                    "diagram_error": "Sorry, we couldn't download the generated diagram. Please try again!"
+                    "diagram_error": "Sorry, we couldn't save the diagram. Please try again!"
                 }
         except Exception as e:
-            logger.error(f"❌ Error downloading DALL-E image: {str(e)}")
+            logger.error(f"❌ Error downloading DALL-E image: {e}")
             return {
                 "diagram_url": "https://placehold.co/400x300?text=Download+Error",
-                "diagram_error": "Sorry, there was an error downloading the diagram. Please try again!"
+                "diagram_error": "Sorry, we couldn't save the diagram. Please try again!"
             }
             
     except Exception as e:
-        logger.error(f"❌ DALL-E error: {str(e)}")
+        logger.error(f"❌ DALL-E generation failed: {e}")
         return {
-            "diagram_url": "https://placehold.co/400x300?text=DALL-E+Error",
+            "diagram_url": "https://placehold.co/400x300?text=Generation+Failed",
             "diagram_error": "Sorry, we couldn't generate a diagram for this topic. Please try a different question!"
         }
 
 def generate_audio_with_tts(text: str) -> str:
-    """Generate audio using OpenAI TTS and return the audio URL."""
+    """Generate audio using OpenAI TTS and return the local audio URL with error handling."""
     try:
         openai_api_key = os.getenv("OPENAI_API_KEY")
         if not openai_api_key:
             logger.error("❌ OPENAI_API_KEY not found in environment")
-            return "https://placehold.co/1s.mp3?text=No+API+Key"
+            return "/uploaded_images/audio_error.mp3"
+        
+        # Truncate text to fit TTS limits
+        if len(text) > 4096:
+            text = text[:4096]
         
         logger.info(f"🔊 Generating TTS audio for text: {text[:100]}...")
         client = OpenAI(api_key=openai_api_key)
@@ -135,17 +205,58 @@ def generate_audio_with_tts(text: str) -> str:
             voice="alloy",
             input=text
         )
-        # Save the audio to a file and return the file path or URL
-        audio_path = os.path.join(UPLOAD_DIR, f"audio_{uuid.uuid4().hex}.mp3")
-        with open(audio_path, "wb") as f:
-            f.write(response.content)
         
-        audio_url = f"/uploaded_images/{os.path.basename(audio_path)}"
-        logger.info(f"✅ TTS audio generated: {audio_url}")
-        return audio_url
+        # Generate a unique filename
+        audio_filename = f"audio_{uuid.uuid4().hex}.mp3"
+        audio_path = os.path.join(UPLOAD_DIR, audio_filename)
+        
+        # Save the audio file
+        response.stream_to_file(audio_path)
+        
+        # Return local URL
+        local_url = f"/uploaded_images/{audio_filename}"
+        logger.info(f"✅ TTS audio saved locally: {local_url}")
+        return local_url
+        
     except Exception as e:
-        logger.error(f"❌ TTS error: {str(e)}")
-        return "https://placehold.co/1s.mp3?text=TTS+Error"
+        logger.error(f"❌ TTS generation failed: {e}")
+        return "/uploaded_images/audio_error.mp3"
+
+def clean_crewai_result(result) -> str:
+    """Extract clean text from CrewAI result, removing JSON formatting."""
+    if isinstance(result, dict):
+        # Look for the actual content in common keys
+        for key in ['result', 'content', 'output', 'text']:
+            if key in result and result[key]:
+                content = str(result[key])
+                # Remove JSON formatting if present
+                if content.startswith('{"') or content.startswith('{'):
+                    try:
+                        parsed = json.loads(content)
+                        if 'result' in parsed:
+                            return str(parsed['result'])
+                        elif 'content' in parsed:
+                            return str(parsed['content'])
+                    except:
+                        pass
+                return content
+        
+        # If no common keys found, try to extract from the whole dict
+        return str(result)
+    else:
+        # Convert to string and clean
+        content = str(result)
+        # Remove JSON formatting if present
+        if content.startswith('{"') or content.startswith('{'):
+            try:
+                parsed = json.loads(content)
+                if 'result' in parsed:
+                    return str(parsed['result'])
+                elif 'content' in parsed:
+                    return str(parsed['content'])
+            except:
+                pass
+        return content
 
 @app.post("/generate", response_class=JSONResponse)
 async def generate(
@@ -165,6 +276,13 @@ async def generate(
             status_code=400,
             content={"error": "Please provide either a question or an image, but not both."}
     )
+    
+    # Check cache for simple text questions
+    if topic and not image:
+        cache_key = f"{topic}_{age}_{interests}"
+        if cache_key in response_cache:
+            logger.info("🚀 Returning cached response")
+            return {"outputs": response_cache[cache_key]}
     
     # 1. Build the inputs dict
     inputs = {}
@@ -201,18 +319,8 @@ async def generate(
             result = crew.kickoff(inputs=inputs)
             logger.info("✅ CrewAI image analysis completed successfully")
             
-            # Convert CrewOutput to dict if needed
-            if not isinstance(result, dict):
-                if hasattr(result, 'dict') and callable(getattr(result, 'dict')):
-                    result = result.dict()
-                elif hasattr(result, '__dict__'):
-                    result = dict(result.__dict__)
-                else:
-                    result = {"result": str(result)}
-            
-            logger.info("🔄 Processing image analysis result for multimodal output...")
-            # Extract explanation for multimodal output
-            explanation = result.get("result") or result.get("content") or str(result)
+            # Clean the result to get just the content
+            explanation = clean_crewai_result(result)
             
             # Generate diagram and audio for the image analysis
             dalle_prefix = "Create a simple, colorful diagram for kids that illustrates: "
@@ -224,9 +332,12 @@ async def generate(
             tts_text = explanation[:4096]
             audio_url = generate_audio_with_tts(tts_text)
             
-            result["diagram_url"] = diagram_result["diagram_url"]
-            result["diagram_error"] = diagram_result["diagram_error"]
-            result["audio_url"] = audio_url
+            final_result = {
+                "result": explanation,
+                "diagram_url": diagram_result["diagram_url"],
+                "diagram_error": diagram_result["diagram_error"],
+                "audio_url": audio_url
+            }
             logger.info("🎉 Image analysis multimodal processing completed")
             
         except Exception as e:
@@ -235,8 +346,18 @@ async def generate(
                 status_code=500,
                 content={"error": str(e)}
             )
-        return {"outputs": result}
+        return {"outputs": final_result}
     elif topic:
+        # Check if this is a simple question for fast path
+        if is_simple_question(topic):
+            logger.info("⚡ Using fast path for simple question")
+            fast_result = fast_path_response(topic, age, interests)
+            if fast_result and not fast_result.get("error"):
+                # Cache the result
+                cache_key = f"{topic}_{age}_{interests}"
+                response_cache[cache_key] = fast_result
+                return {"outputs": fast_result}
+        
         # Text mode - use CrewAI workflow
         inputs = {"topic": topic, "age": age, "interests": interests}
         logger.info(f"🚀 Starting CrewAI workflow with inputs: {inputs}")
@@ -249,28 +370,31 @@ async def generate(
             logger.info("⚡ Starting crew.kickoff()...")
             result = crew.kickoff(inputs=inputs)
             logger.info("✅ CrewAI completed successfully")
-            # Convert CrewOutput to dict if needed
-            if not isinstance(result, dict):
-                if hasattr(result, 'dict') and callable(getattr(result, 'dict')):
-                    result = result.dict()
-                elif hasattr(result, '__dict__'):
-                    result = dict(result.__dict__)
-                else:
-                    result = {"result": str(result)}
-            logger.info("🔄 Processing result for multimodal output...")
-            # Extract explanation for multimodal output
-            explanation = result.get("content") or result.get("result") or str(result)
+            
+            # Clean the result to get just the content
+            explanation = clean_crewai_result(result)
+            
             # Generate diagram and audio
             dalle_prefix = "Create a simple, colorful diagram for kids that illustrates: "
             max_explanation_len = 4000 - len(dalle_prefix)
             dalle_prompt = dalle_prefix + explanation[:max_explanation_len]
             diagram_result = generate_diagram_with_dalle(dalle_prompt)
+            
             # Truncate explanation for TTS to 4096 characters
             tts_text = explanation[:4096]
             audio_url = generate_audio_with_tts(tts_text)
-            result["diagram_url"] = diagram_result["diagram_url"]
-            result["diagram_error"] = diagram_result["diagram_error"]
-            result["audio_url"] = audio_url
+            
+            final_result = {
+                "result": explanation,
+                "diagram_url": diagram_result["diagram_url"],
+                "diagram_error": diagram_result["diagram_error"],
+                "audio_url": audio_url
+            }
+            
+            # Cache the result
+            cache_key = f"{topic}_{age}_{interests}"
+            response_cache[cache_key] = final_result
+            
             logger.info("🎉 Multimodal processing completed")
         except Exception as e:
             logger.exception("❌ CrewAI execution or multimodal generation failed")
@@ -278,7 +402,7 @@ async def generate(
                 status_code=500,
                 content={"error": str(e)}
             )
-        return {"outputs": result}
+        return {"outputs": final_result}
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
