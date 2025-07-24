@@ -367,34 +367,53 @@
 
         async function loadAvailableQuizzes() {
             try {
-                // For now, we'll show a placeholder
-                // In a real app, you'd fetch available quizzes from the server
-                const container = document.getElementById('quiz-list');
-                container.innerHTML = `
-                    <div class="quiz-item" onclick="startQuiz('sample-quiz-1')">
-                        <h3>🌍 World Geography Quiz</h3>
-                        <p>Test your knowledge about countries and capitals!</p>
-                        <small>5 questions • Medium difficulty</small>
-                    </div>
-                    <div class="quiz-item" onclick="startQuiz('sample-quiz-2')">
-                        <h3>🔬 Science Explorer Quiz</h3>
-                        <p>Learn about amazing scientific discoveries!</p>
-                        <small>5 questions • Easy difficulty</small>
-                    </div>
-                    <div class="quiz-item" onclick="startQuiz('sample-quiz-3')">
-                        <h3>🐾 Animal Kingdom Quiz</h3>
-                        <p>Discover fascinating facts about animals!</p>
-                        <small>5 questions • Medium difficulty</small>
-                    </div>
-                `;
+                const response = await fetch('/quizzes/available', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const container = document.getElementById('quiz-list');
+                    
+                    if (data.quizzes.length === 0) {
+                        container.innerHTML = `
+                            <div style="text-align: center; padding: 40px; color: #667eea;">
+                                <h3>🎯 No quizzes available yet!</h3>
+                                <p>Ask some questions to generate quizzes automatically.</p>
+                                <a href="/" class="btn">Start Learning</a>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    container.innerHTML = data.quizzes.map(quiz => `
+                        <div class="quiz-item" onclick="startQuiz('${quiz.id}')" style="position: relative;">
+                            ${quiz.completed ? '<div style="position: absolute; top: 10px; right: 10px; background: #51cf66; color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.8rem;">✅ Completed</div>' : ''}
+                            <h3>${quiz.title}</h3>
+                            <p>${quiz.topic}</p>
+                            <small>${quiz.num_questions} questions • ${quiz.difficulty} difficulty • ~${quiz.estimated_time} min</small>
+                        </div>
+                    `).join('');
+                } else {
+                    throw new Error('Failed to fetch quizzes');
+                }
             } catch (error) {
                 console.error('Error loading quizzes:', error);
+                const container = document.getElementById('quiz-list');
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ff6b6b;">
+                        <h3>❌ Error loading quizzes</h3>
+                        <p>Please try again later.</p>
+                    </div>
+                `;
             }
         }
 
         function startQuiz(quizId) {
             // Navigate to quiz page
-            window.location.href = `/quiz.html?id=${quizId}`;
+            window.location.href = `/quiz?id=${quizId}`;
         }
 
         function logout() {

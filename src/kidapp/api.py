@@ -921,3 +921,35 @@ async def search_knowledge(query: str):
         "results": contexts,
         "total_results": len(contexts)
     }
+
+@app.get("/quizzes/available", response_class=JSONResponse)
+async def get_available_quizzes(current_user: UserResponse = Depends(get_current_user)):
+    """Get all available quizzes for the current user."""
+    try:
+        # Get all quizzes from memory storage
+        quizzes = list(memory_storage.quizzes.values())
+        
+        # Get user's quiz attempts to show completion status
+        user_attempts = memory_storage.quiz_attempts.get(current_user.id, [])
+        attempted_quiz_ids = {attempt.quiz_id for attempt in user_attempts}
+        
+        # Add completion status to each quiz
+        quiz_data = []
+        for quiz in quizzes:
+            quiz_info = {
+                "id": quiz.id,
+                "title": quiz.title,
+                "topic": quiz.topic,
+                "difficulty": quiz.difficulty.value,
+                "num_questions": len(quiz.questions),
+                "estimated_time": quiz.estimated_time,
+                "completed": quiz.id in attempted_quiz_ids
+            }
+            quiz_data.append(quiz_info)
+        
+        return {"quizzes": quiz_data}
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to fetch quizzes: {str(e)}"}
+        )
