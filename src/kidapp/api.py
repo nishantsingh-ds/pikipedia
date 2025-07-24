@@ -781,3 +781,73 @@ async def login_page():
     """Serve the login page."""
     with open("src/kidapp/static/login.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
+
+@app.get("/debug", response_class=HTMLResponse)
+async def debug_page():
+    """Simple debug page to view memory storage data."""
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>WonderBot Debug</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; }}
+            .section {{ margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }}
+            .user {{ background: #f0f8ff; padding: 10px; margin: 5px 0; border-radius: 3px; }}
+            .session {{ background: #f0fff0; padding: 10px; margin: 5px 0; border-radius: 3px; }}
+            .stats {{ background: #fff8f0; padding: 10px; margin: 5px 0; border-radius: 3px; }}
+            button {{ padding: 10px 15px; margin: 5px; cursor: pointer; }}
+        </style>
+    </head>
+    <body>
+        <h1>🔍 WonderBot Debug Page</h1>
+        
+        <div class="section">
+            <h2>📊 Storage Statistics</h2>
+            <div class="stats">
+                <p><strong>Total Users:</strong> {len(memory_storage.users)}</p>
+                <p><strong>Total Sessions:</strong> {sum(len(sessions) for sessions in memory_storage.sessions.values())}</p>
+                <p><strong>Total Quizzes:</strong> {len(memory_storage.quizzes)}</p>
+                <p><strong>Total Quiz Attempts:</strong> {sum(len(attempts) for attempts in memory_storage.quiz_attempts.values())}</p>
+                <p><strong>Cache Size:</strong> {len(response_cache)}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>👥 Registered Users</h2>
+            <div id="users">
+                {chr(10).join(f'<div class="user"><strong>{user.username}</strong> ({user.email}) - Age: {user.age or "N/A"} - Interests: {user.interests or "N/A"}</div>' for user in memory_storage.users.values())}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 Recent Sessions</h2>
+            <div id="sessions">
+                {chr(10).join(f'<div class="session"><strong>{session.topic}</strong> - {session.timestamp.strftime("%Y-%m-%d %H:%M") if session.timestamp else "No timestamp"}</div>' for sessions in memory_storage.sessions.values() for session in sessions[-5:])}
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🛠️ Actions</h2>
+            <button onclick="clearData()">Clear All Data</button>
+            <button onclick="location.reload()">Refresh Page</button>
+            <button onclick="window.open('/debug/storage', '_blank')">View Full JSON</button>
+        </div>
+
+        <script>
+            async function clearData() {{
+                if (confirm('Are you sure you want to clear all data?')) {{
+                    const response = await fetch('/clear-data', {{ method: 'POST' }});
+                    if (response.ok) {{
+                        alert('Data cleared successfully!');
+                        location.reload();
+                    }} else {{
+                        alert('Failed to clear data');
+                    }}
+                }}
+            }}
+        </script>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)

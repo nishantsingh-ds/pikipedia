@@ -412,6 +412,49 @@
             document.getElementById('login-password').value = 'password';
             handleLogin(new Event('submit'));
         }
+
+        // Debug function to check storage
+        async function debugStorage() {
+            try {
+                const response = await fetch('/debug/storage');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('🔍 Memory Storage Data:', data);
+                    return data;
+                } else {
+                    console.error('❌ Debug endpoint not available:', response.status);
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Error accessing debug endpoint:', error);
+                return null;
+            }
+        }
+
+        // Debug function to check users
+        async function debugUsers() {
+            try {
+                const response = await fetch('/debug/users');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('👥 Registered Users:', data);
+                    return data;
+                } else {
+                    console.error('❌ Users endpoint not available:', response.status);
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Error accessing users endpoint:', error);
+                return null;
+            }
+        }
+
+        // Auto-check storage on page load
+        window.addEventListener('load', () => {
+            console.log('🔍 Checking memory storage...');
+            debugStorage();
+            debugUsers();
+        });
     </script>
 </body>
 </html> 
