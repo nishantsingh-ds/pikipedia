@@ -1,3 +1,7 @@
+"""
+Enhanced WonderBot API with authentication, quiz generation, and session management
+"""
+
 import os
 import uuid
 import logging
@@ -5,22 +9,29 @@ import hashlib
 import requests
 import json
 from functools import lru_cache
+from datetime import datetime
+from typing import Optional, List, Dict, Any
 
 from io import BytesIO
 from PIL import Image
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, status
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-    pass  # dotenv not available, use system environment variables
+    pass
 
-from kidapp.crew import KidSafeAppCrew
+from .crew import KidSafeAppCrew
+from .models import *
+from .auth import get_current_user, register_user, login_user
+from .quiz_generator import generate_quiz_from_explanation, save_quiz_to_memory, get_quiz_by_id, submit_quiz_attempt
+from .routers import auth_router, quiz_router, session_router
 from openai import OpenAI
 import base64
 
@@ -30,15 +41,15 @@ logger = logging.getLogger(__name__)
 
 # ——— App & upload directory ———
 app = FastAPI(
-    title="Kid Educate App POC API",
-    version="0.1.0",
-    description="Proof-of-concept API to run the KidSafeAppCrew and return results."
+    title="WonderBot Enhanced API",
+    version="2.0.0",
+    description="AI-powered educational web app for kids with authentication, quizzes, and session management."
 )
 
 # Add CORS middleware for deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,6 +66,48 @@ app.mount("/static", StaticFiles(directory="src/kidapp/static"), name="static")
 
 # Simple cache for fast path responses
 response_cache = {}
+
+# Security
+security = HTTPBearer()
+
+# ——— Include Routers ———
+app.include_router(auth_router.router)
+app.include_router(quiz_router.router)
+app.include_router(session_router.router)
+
+# ——— Learning Progress Endpoints ———
+
+@app.get("/learning/progress/{user_id}", response_class=JSONResponse)
+async def get_learning_progress(user_id: str, current_user: UserResponse = Depends(get_current_user)):
+    """Get learning progress for a user."""
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this user's progress")
+    
+    progress = memory_storage.learning_progress.get(user_id, {})
+    return {"progress": progress}
+
+@app.get("/learning/recommendations/{user_id}", response_class=JSONResponse)
+async def get_learning_recommendations(user_id: str, current_user: UserResponse = Depends(get_current_user)):
+    """Get personalized learning recommendations."""
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this user's recommendations")
+    
+    # Simple recommendation logic based on user interests and progress
+    user = current_user
+    recommendations = []
+    
+    if user.interests:
+        interests = user.interests.split(",")
+        for interest in interests[:3]:  # Top 3 interests
+            recommendations.append({
+                "topic": interest.strip(),
+                "reason": f"Based on your interest in {interest.strip()}",
+                "difficulty": "medium"
+            })
+    
+    return {"recommendations": recommendations}
+
+# ——— Original WonderBot Endpoints (Enhanced) ———
 
 def is_simple_question(topic: str) -> bool:
     """Check if the question is simple enough for fast path."""
@@ -204,8 +257,6 @@ def fast_path_image_analysis(image_path: str, age: int = None, interests: str = 
         logger.error(f"Fast path image analysis failed: {e}")
         return None
 
-# Note: Image analysis is now handled by CrewAI agents instead of direct OpenAI calls
-
 def generate_diagram_with_dalle(prompt: str) -> dict:
     """Generate a diagram using OpenAI DALL-E and return the local image URL with error handling."""
     try:
@@ -342,41 +393,32 @@ def clean_crewai_result(result) -> str:
                         pass
                 return content
         
-        # If no common keys found, try to extract from the whole dict
+        # If no specific key found, return the whole result as string
         return str(result)
     else:
-        # Convert to string and clean
-        content = str(result)
-        # Remove JSON formatting if present
-        if content.startswith('{"') or content.startswith('{'):
-            try:
-                parsed = json.loads(content)
-                if 'result' in parsed:
-                    return str(parsed['result'])
-                elif 'content' in parsed:
-                    return str(parsed['content'])
-            except:
-                pass
-        return content
+        return str(result)
 
 @app.post("/generate", response_class=JSONResponse)
 async def generate(
     topic: str = Form(None, description="The topic or question to explain (optional if image is provided)"),
     image: UploadFile = File(None, description="Optional image to analyze"),
     age: int = Form(None, description="Child's age (optional)"),
-    interests: str = Form(None, description="Comma-separated interests (optional)")
+    interests: str = Form(None, description="Comma-separated interests (optional)"),
+    current_user: Optional[UserResponse] = Depends(get_current_user)
 ):
     """
     Generate a kid-friendly explanation for either:
     - An uploaded image (if image is provided)
     - A text topic/question (if topic is provided)
+    
+    Now with session tracking and user authentication!
     """
     # Enforce that only one of image or topic is provided
     if (image and topic) or (not image and not topic):
         return JSONResponse(
             status_code=400,
             content={"error": "Please provide either a question or an image, but not both."}
-    )
+        )
     
     # Check cache for simple text questions
     if topic and not image:
@@ -420,6 +462,19 @@ async def generate(
             logger.info("✅ Fast path image analysis completed successfully")
             # Cache the result
             response_cache[image_cache_key] = fast_result
+            
+            # Save session data if user is authenticated
+            if current_user:
+                session_router.save_session_data(
+                    user_id=current_user.id,
+                    topic=f"Image Analysis: {image.filename}",
+                    explanation=fast_result["result"],
+                    diagram_url=fast_result["diagram_url"],
+                    audio_url=fast_result["audio_url"],
+                    age=age,
+                    interests=interests
+                )
+            
             return {"outputs": fast_result}
         
         # Fallback to CrewAI workflow if fast path fails
@@ -459,6 +514,18 @@ async def generate(
             # Cache the result
             response_cache[image_cache_key] = final_result
             
+            # Save session data if user is authenticated
+            if current_user:
+                session_router.save_session_data(
+                    user_id=current_user.id,
+                    topic=f"Image Analysis: {image.filename}",
+                    explanation=explanation,
+                    diagram_url=diagram_result["diagram_url"],
+                    audio_url=audio_url,
+                    age=age,
+                    interests=interests
+                )
+            
             logger.info("🎉 Image analysis multimodal processing completed")
             
         except Exception as e:
@@ -477,6 +544,19 @@ async def generate(
                 # Cache the result
                 cache_key = f"{topic}_{age}_{interests}"
                 response_cache[cache_key] = fast_result
+                
+                # Save session data if user is authenticated
+                if current_user:
+                    session_router.save_session_data(
+                        user_id=current_user.id,
+                        topic=topic,
+                        explanation=fast_result["result"],
+                        diagram_url=fast_result["diagram_url"],
+                        audio_url=fast_result["audio_url"],
+                        age=age,
+                        interests=interests
+                    )
+                
                 return {"outputs": fast_result}
         
         # Text mode - use CrewAI workflow
@@ -516,6 +596,18 @@ async def generate(
             cache_key = f"{topic}_{age}_{interests}"
             response_cache[cache_key] = final_result
             
+            # Save session data if user is authenticated
+            if current_user:
+                session_router.save_session_data(
+                    user_id=current_user.id,
+                    topic=topic,
+                    explanation=explanation,
+                    diagram_url=diagram_result["diagram_url"],
+                    audio_url=audio_url,
+                    age=age,
+                    interests=interests
+                )
+            
             logger.info("🎉 Multimodal processing completed")
         except Exception as e:
             logger.exception("❌ CrewAI execution or multimodal generation failed")
@@ -529,4 +621,16 @@ async def generate(
 async def read_root():
     """Serve the frontend HTML page."""
     with open("src/kidapp/static/index.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard():
+    """Serve the dashboard page."""
+    with open("src/kidapp/static/dashboard.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page():
+    """Serve the login page."""
+    with open("src/kidapp/static/login.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())

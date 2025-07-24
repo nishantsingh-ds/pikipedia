@@ -3,645 +3,579 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WonderBot - AI Learning Adventure for Kids</title>
-    <meta name="description" content="WonderBot: AI-powered educational explanations, diagrams, and audio for curious kids. Safe, fun, and colorful learning!">
-    <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f393.png">
+    <title>🎓 WonderBot - AI Learning Companion</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #4A90E2 0%, #FF6B6B 25%, #4ECDC4 50%, #FFD93D 75%, #9B59B6 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            color: #222;
+            color: #333;
         }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        a { color: #4ecdc4; text-decoration: none; }
-        a:hover { text-decoration: underline; }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            overflow: hidden;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
-        .hero {
-            background: linear-gradient(135deg, #4A90E2, #FF6B6B, #4ECDC4);
-            background-size: 200% 200%;
-            animation: heroGradient 8s ease infinite;
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            padding: 60px 30px 40px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hero {
             text-align: center;
-            position: relative;
-            overflow: hidden;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
-        
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="90" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes heroGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
+
         .hero h1 {
             font-size: 3rem;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.12);
-        }
-        .hero p {
-            font-size: 1.3rem;
-            opacity: 0.95;
+            color: #667eea;
             margin-bottom: 20px;
         }
-        .cta-btn {
-            background: linear-gradient(45deg, #FFD93D, #FF8C42);
-            color: #fff;
-            border: none;
-            padding: 16px 36px;
-            border-radius: 30px;
+
+        .hero p {
             font-size: 1.2rem;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 217, 61, 0.3);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .cta-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        .cta-btn:hover::before {
-            left: 100%;
-        }
-        .cta-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 217, 61, 0.4);
-        }
-        .main-content {
-            padding: 40px 24px 24px 24px;
-        }
-        .section-title {
-            font-size: 2rem;
-            color: #333;
-            margin-bottom: 18px;
-            text-align: center;
-        }
-        .how-it-works {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        .how-step {
-            flex: 1 1 220px;
-            background: linear-gradient(135deg, #f8f9fa, #e3f2fd);
-            border-radius: 15px;
-            padding: 24px 18px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            min-width: 220px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 2px solid transparent;
-        }
-        .how-step:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-            border-color: #4A90E2;
-        }
-        .how-step .emoji {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-        }
-        .how-step h3 {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-            background: linear-gradient(45deg, #4A90E2, #9B59B6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .how-step p {
-            font-size: 1rem;
-            color: #555;
-        }
-        .form-section {
-            background: linear-gradient(135deg, #f8f9fa, #fff5f5);
-            padding: 30px;
-            border-radius: 15px;
+            color: #666;
             margin-bottom: 30px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            border: 2px solid #FF6B6B;
-            position: relative;
-            overflow: hidden;
         }
-        .form-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #4A90E2, #FF6B6B, #4ECDC4, #FFD93D);
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
         }
-        .form-section h2 {
-            text-align: center;
-            margin-bottom: 18px;
-            color: #333;
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
         }
-        .form-group { margin-bottom: 20px; }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .main-form {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 600;
             color: #333;
+            font-weight: 500;
         }
-        .form-group input, .form-group textarea {
+
+        .form-group input,
+        .form-group textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
         }
-        .form-group input:focus, .form-group textarea:focus {
+
+        .form-group input:focus,
+        .form-group textarea:focus {
             outline: none;
-            border-color: #4ecdc4;
+            border-color: #667eea;
         }
-        .submit-btn {
-            background: linear-gradient(45deg, #4A90E2, #9B59B6, #FF6B6B);
-            background-size: 200% 200%;
-            animation: buttonGradient 3s ease infinite;
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .file-label:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 18px;
-            font-weight: 600;
+            border-radius: 10px;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
+            transition: transform 0.3s ease;
+            margin-top: 20px;
         }
-        .submit-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.6s;
+
+        .btn:hover {
+            transform: translateY(-2px);
         }
-        .submit-btn:hover::before {
-            left: 100%;
-        }
-        .submit-btn:hover { 
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(74, 144, 226, 0.4);
-        }
-        @keyframes buttonGradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        .submit-btn:disabled {
+
+        .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
+
         .loading {
             text-align: center;
-            padding: 20px;
-            color: #666;
+            padding: 40px;
+            color: #667eea;
         }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4ecdc4;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .results { display: none; margin-top: 30px; }
-        .result-card {
-            background: white;
-            border: 2px solid #e9ecef;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-        .result-card h3 { color: #333; margin-bottom: 15px; font-size: 1.3rem; }
-        .text-response { line-height: 1.6; color: #555; font-size: 16px; }
-        .diagram-section { text-align: center; margin: 20px 0; }
-        .diagram-section img {
-            max-width: 100%;
-            max-height: 400px;
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.12);
+            margin: 10px 0;
         }
-        .audio-section { text-align: center; margin: 20px 0; }
-        .audio-player {
+
+        .success {
+            background: #51cf66;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .results {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-section {
+            margin-bottom: 30px;
+        }
+
+        .result-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .diagram-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .diagram-container img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .audio-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .audio-container audio {
             width: 100%;
             max-width: 400px;
-            height: 60px;
-            border-radius: 30px;
-            background: #f8f9fa;
-            border: 2px solid #e9ecef;
         }
-        .error {
-            background: #ffe6e6;
-            color: #d63031;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #d63031;
-            margin: 20px 0;
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
-        .success {
-            background: #e6ffe6;
-            color: #00b894;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #00b894;
-            margin: 20px 0;
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
         }
-        .example-topics {
-            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 20px;
-            border: 2px solid #4A90E2;
-            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.1);
-        }
-        .example-topics h4 {
-            background: linear-gradient(45deg, #4A90E2, #9B59B6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-        .example-topics ul {
-            list-style: none;
-            padding: 0;
-        }
-        .example-topics li {
-            background: linear-gradient(135deg, #fff, #f8f9fa);
-            margin: 5px 0;
-            padding: 10px 18px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid #e3f2fd;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .example-topics li:hover { 
-            background: linear-gradient(135deg, #4A90E2, #9B59B6);
-            color: white;
-            transform: translateX(5px);
-            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
-        }
-        .how-to-use, .faq-section, .footer {
-            margin: 40px auto 0 auto;
-            max-width: 800px;
-        }
-        .how-to-use h3, .faq-section h3 {
-            background: linear-gradient(45deg, #4A90E2, #FF6B6B);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-        .how-to-use ol {
-            margin-left: 20px;
-            margin-bottom: 10px;
-        }
-        .faq-section details {
-            background: linear-gradient(135deg, #f8f9fa, #fff5f5);
-            border-radius: 12px;
-            margin-bottom: 12px;
-            padding: 16px 20px;
-            cursor: pointer;
-            border: 1px solid #e3f2fd;
-            transition: all 0.3s ease;
-        }
-        .faq-section details:hover {
-            transform: translateX(3px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-color: #4A90E2;
-        }
-        .faq-section summary {
-            font-weight: 600;
-            color: #333;
-        }
-        .footer {
-            background: linear-gradient(135deg, #f8f9fa, #e3f2fd);
-            border-radius: 0 0 20px 20px;
-            padding: 24px 18px;
-            text-align: center;
-            color: #666;
-            font-size: 0.98rem;
-            margin-top: 60px;
-            border-top: 3px solid;
-            border-image: linear-gradient(90deg, #4A90E2, #FF6B6B, #4ECDC4, #FFD93D) 1;
-        }
-        @media (max-width: 900px) {
-            .how-it-works { flex-direction: column; align-items: center; }
-        }
-        @media (max-width: 600px) {
-            .main-content { padding: 16px 4px; }
-            .form-section { padding: 14px; }
-            .hero { padding: 36px 8px 24px 8px; }
-            .section-title { font-size: 1.3rem; }
+
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <header class="header">
+            <nav class="nav">
+                <a href="/" class="logo">🎓 WonderBot</a>
+                <div class="nav-links">
+                    <a href="/" class="nav-link">🏠 Home</a>
+                    <a href="/dashboard" class="nav-link">📊 Dashboard</a>
+                    <a href="/login" class="nav-link">🔐 Login</a>
+                </div>
+                <div class="user-info">
+                    <span id="username" style="display: none;">Welcome!</span>
+                    <div class="auth-buttons">
+                        <button class="btn btn-secondary" onclick="window.location.href='/login'">Login</button>
+                        <button class="btn" onclick="window.location.href='/dashboard'">Dashboard</button>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
         <div class="hero">
             <h1>🤖 WonderBot</h1>
             <p>AI-powered educational explanations, diagrams, and audio for curious kids, parents, and teachers!</p>
-            <button class="cta-btn" onclick="document.getElementById('kidapp-form').scrollIntoView({behavior: 'smooth'})">Start Your Learning Adventure!</button>
+            <button class="btn" onclick="scrollToForm()">Start Your Learning Adventure!</button>
         </div>
-        <div class="main-content">
-            <div class="section-title">How WonderBot Works</div>
-            <div class="how-it-works">
-                <div class="how-step">
-                    <div class="emoji">📝</div>
-                    <h3>Ask or Upload</h3>
-                    <p>Type a question or upload an image. You can also add age and interests for a personalized answer.</p>
-                </div>
-                <div class="how-step">
-                    <div class="emoji">🤖</div>
-                    <h3>AI Agents Collaborate</h3>
-                    <p>Our CrewAI agents research, explain, check for safety, and create analogies just for kids.</p>
-                </div>
-                <div class="how-step">
-                    <div class="emoji">🎨</div>
-                    <h3>Get Multimodal Results</h3>
-                    <p>Receive a kid-friendly explanation, a custom diagram, and an audio version—instantly!</p>
-                </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <h3>📝 Ask or Upload</h3>
+                <p>Type a question or upload an image. You can also add age and interests for a personalized answer.</p>
             </div>
-            <div class="section-title">What Can I Ask?</div>
-            <div class="example-topics">
-                <h4>Popular Topics & Ideas</h4>
-                <ul>
-                    <li onclick="setTopic('Why is the sky blue?')">Why is the sky blue?</li>
-                    <li onclick="setTopic('How do volcanoes erupt?')">How do volcanoes erupt?</li>
-                    <li onclick="setTopic('What is gravity?')">What is gravity?</li>
-                    <li onclick="setTopic('How do fish breathe underwater?')">How do fish breathe underwater?</li>
-                    <li onclick="setTopic('What are black holes?')">What are black holes?</li>
-                    <li onclick="setTopic('How do plants make food?')">How do plants make food?</li>
-                    <li onclick="setTopic('Why do we have seasons?')">Why do we have seasons?</li>
-                    <li onclick="setTopic('What is electricity?')">What is electricity?</li>
-                    <li onclick="setTopic('How do computers work?')">How do computers work?</li>
-                    <li onclick="setTopic('What makes a rainbow?')">What makes a rainbow?</li>
-                </ul>
-                <div style="margin-top: 10px; color: #555; font-size: 0.98rem;">
-                    ...or upload a photo of an animal, plant, or object to get a fun explanation!
-                </div>
+            <div class="feature-card">
+                <h3>🤖 AI Agents Collaborate</h3>
+                <p>Our CrewAI agents research, explain, check for safety, and create analogies just for kids.</p>
             </div>
-            <div class="section-title" style="margin-top: 40px;">How to Use WonderBot</div>
-            <div class="how-to-use">
-                <h3>Step-by-Step Guide</h3>
-                <ol>
-                    <li>Type a question <b>or</b> upload an image (not both at once).</li>
-                    <li>Optionally, enter the child's age and interests for a tailored answer.</li>
-                    <li>Click <b>"Generate Kid-Friendly Explanation"</b>.</li>
-                    <li>Wait a few moments while our AI agents collaborate.</li>
-                    <li>View your results: text, diagram, and audio!</li>
-                </ol>
-                <div style="color: #666; font-size: 0.97rem; margin-top: 8px;">
-                    <b>Tip:</b> Try different questions, topics, or images for new results every time!
-                </div>
-            </div>
-            <div class="form-section">
-                <h2>Ask a Question or Upload an Image</h2>
-                <form id="kidapp-form">
-                    <div class="form-group">
-                        <label for="topic">What would you like to learn about?</label>
-                        <textarea id="topic" name="topic" rows="3" placeholder="e.g., Why do birds sing? How do plants grow? What makes rainbows?"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="age">Child's Age (optional)</label>
-                        <input type="number" id="age" name="age" min="3" max="18" placeholder="e.g., 7">
-                    </div>
-                    <div class="form-group">
-                        <label for="interests">Interests (optional)</label>
-                        <input type="text" id="interests" name="interests" placeholder="e.g., animals, space, music, art">
-                    </div>
-                    <div class="form-group">
-                        <label for="image">Upload an Image (optional)</label>
-                        <input type="file" id="image" name="image" accept="image/*">
-                    </div>
-                    <button type="submit" class="submit-btn" id="submit-btn">
-                        🚀 Generate Kid-Friendly Explanation
-                    </button>
-                </form>
-            </div>
-            <div id="loading" class="loading" style="display: none;">
-                <div class="spinner"></div>
-                <p>🤖 Our AI agents are working hard to create your explanation...</p>
-                <p style="font-size: 14px; margin-top: 10px;">This may take 30-60 seconds</p>
-            </div>
-            <div id="results" class="results">
-                <div class="result-card">
-                    <h3>📚 Explanation</h3>
-                    <div id="text-response" class="text-response"></div>
-                </div>
-                <div class="result-card">
-                    <h3>🎨 Visual Diagram</h3>
-                    <div id="diagram-section" class="diagram-section">
-                        <p>Loading diagram...</p>
-                    </div>
-                </div>
-                <div class="result-card">
-                    <h3>🔊 Audio Version</h3>
-                    <div id="audio-section" class="audio-section">
-                        <p>Loading audio...</p>
-                    </div>
-                </div>
-            </div>
-            <div class="faq-section">
-                <h3>Frequently Asked Questions</h3>
-                <details>
-                    <summary>Is KidApp safe for children?</summary>
-                    <div>Yes! All content is checked by our AI safety agent to ensure it's age-appropriate and free from harmful or complex language.</div>
-                </details>
-                <details>
-                    <summary>Can I use KidApp as a teacher or parent?</summary>
-                    <div>Absolutely! KidApp is designed for kids, parents, and educators. Use it to spark curiosity, explain tough topics, or create fun learning moments.</div>
-                </details>
-                <details>
-                    <summary>What kinds of images can I upload?</summary>
-                    <div>You can upload photos of animals, objects, plants, or scenes. Please avoid personal photos or anything not suitable for children.</div>
-                </details>
-                <details>
-                    <summary>How long does it take to get results?</summary>
-                    <div>Usually 30-60 seconds. Complex questions or large images may take a bit longer.</div>
-                </details>
-                <details>
-                    <summary>Is my data private?</summary>
-                    <div>We do not store your questions, images, or results. All processing is done securely and privately.</div>
-                </details>
+            <div class="feature-card">
+                <h3>🎨 Get Multimodal Results</h3>
+                <p>Receive a kid-friendly explanation, a custom diagram, and an audio version—instantly!</p>
             </div>
         </div>
-        <div class="footer">
-            &copy; 2024 WonderBot &mdash; Built with <span style="color:#ff6b6b">&hearts;</span> using CrewAI, OpenAI, and FastAPI.<br>
-            <a href="mailto:hello@wonderbot.ai">Contact</a> &middot; <a href="#">Privacy Policy</a> &middot; <a href="#">Terms</a>
+
+        <div class="main-form">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #667eea;">Ask a Question or Upload an Image</h2>
+            
+            <div id="error-message" class="error" style="display: none;"></div>
+            <div id="success-message" class="success" style="display: none;"></div>
+            
+            <form id="main-form" onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label for="topic">What would you like to learn about?</label>
+                    <textarea id="topic" placeholder="e.g., Why do birds sing? How do plants grow? What makes rainbows?"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="age">Child's Age (optional)</label>
+                    <input type="number" id="age" placeholder="e.g., 7" min="3" max="18">
+                </div>
+                
+                <div class="form-group">
+                    <label for="interests">Interests (optional)</label>
+                    <input type="text" id="interests" placeholder="e.g., animals, space, music, art">
+                </div>
+                
+                <div class="form-group">
+                    <label for="image">Upload an Image (optional)</label>
+                    <input type="file" id="image" class="file-input" accept="image/*">
+                    <label for="image" class="file-label">📁 Choose Image</label>
+                    <div id="file-name" style="margin-top: 10px; color: #666;"></div>
+                </div>
+                
+                <button type="submit" class="btn" id="submit-btn">🚀 Generate Kid-Friendly Explanation</button>
+            </form>
+        </div>
+
+        <div id="results" class="results" style="display: none;">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #667eea;">Your Learning Results</h2>
+            
+            <div class="result-section">
+                <h3>📚 Explanation</h3>
+                <div id="explanation"></div>
+            </div>
+            
+            <div class="result-section">
+                <h3>🎨 Diagram</h3>
+                <div id="diagram" class="diagram-container">
+                    <div class="loading">Loading diagram...</div>
+                </div>
+            </div>
+            
+            <div class="result-section">
+                <h3>🔊 Audio</h3>
+                <div id="audio" class="audio-container">
+                    <div class="loading">Loading audio...</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-secondary" onclick="generateQuiz()">🎯 Generate Quiz</button>
+            </div>
         </div>
     </div>
+
     <script>
-        function setTopic(topic) {
-            document.getElementById('topic').value = topic;
-            document.getElementById('kidapp-form').scrollIntoView({behavior: 'smooth'});
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = null;
+
+        // Check authentication on page load
+        window.addEventListener('load', async () => {
+            if (authToken) {
+                try {
+                    const response = await fetch('/auth/me', {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const userData = await response.json();
+                        currentUser = userData.user;
+                        document.getElementById('username').textContent = `Welcome, ${currentUser.username}!`;
+                        document.getElementById('username').style.display = 'inline';
+                    }
+                } catch (error) {
+                    console.error('Authentication error:', error);
+                    localStorage.removeItem('authToken');
+                }
+            }
+        });
+
+        function scrollToForm() {
+            document.querySelector('.main-form').scrollIntoView({ behavior: 'smooth' });
         }
-        document.getElementById('kidapp-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+
+        // File input handling
+        document.getElementById('image').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'No file chosen';
+            document.getElementById('file-name').textContent = fileName;
+        });
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
             const topic = document.getElementById('topic').value.trim();
-            const imageInput = document.getElementById('image');
-            const hasImage = imageInput && imageInput.files.length > 0;
-            if ((topic && hasImage) || (!topic && !hasImage)) {
-                showError('Please provide either a question or an image, but not both.');
+            const image = document.getElementById('image').files[0];
+            const age = document.getElementById('age').value;
+            const interests = document.getElementById('interests').value;
+            
+            // Validate input
+            if (!topic && !image) {
+                showError('Please provide either a question or an image.');
                 return;
             }
-            const submitBtn = document.getElementById('submit-btn');
-            const loading = document.getElementById('loading');
-            const results = document.getElementById('results');
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Generating...';
-            loading.style.display = 'block';
-            results.style.display = 'none';
-            document.getElementById('text-response').innerHTML = '';
-            document.getElementById('diagram-section').innerHTML = '<p>Loading diagram...</p>';
-            document.getElementById('audio-section').innerHTML = '<p>Loading audio...</p>';
-            const formData = new FormData();
-            formData.append('topic', document.getElementById('topic').value);
-            const age = document.getElementById('age').value;
-            if (age) formData.append('age', age);
-            const interests = document.getElementById('interests').value;
-            if (interests) formData.append('interests', interests);
-            if (hasImage) {
-                formData.append('image', imageInput.files[0]);
+            
+            if (topic && image) {
+                showError('Please provide either a question OR an image, not both.');
+                return;
             }
+            
+            // Show loading state
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '🤖 AI Agents Working...';
+            
+            // Hide previous results
+            document.getElementById('results').style.display = 'none';
+            hideMessages();
+            
+            // Prepare form data
+            const formData = new FormData();
+            if (topic) formData.append('topic', topic);
+            if (image) formData.append('image', image);
+            if (age) formData.append('age', age);
+            if (interests) formData.append('interests', interests);
+            
+            // Add authentication header if available
+            const headers = {};
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
             try {
                 const response = await fetch('/generate', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    headers: headers
                 });
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResults(data.outputs);
+                    showSuccess('Explanation generated successfully!');
+                } else {
+                    const errorData = await response.json();
+                    showError(errorData.error || 'Failed to generate explanation.');
                 }
-                const data = await response.json();
-                displayResults(data);
             } catch (error) {
                 console.error('Error:', error);
-                showError('Sorry! Something went wrong. Please try again.');
+                showError('Network error. Please try again.');
             } finally {
-                loading.style.display = 'none';
                 submitBtn.disabled = false;
                 submitBtn.textContent = '🚀 Generate Kid-Friendly Explanation';
             }
-        });
-        function displayResults(data) {
-            const results = document.getElementById('results');
-            const outputs = data.outputs;
-            let textContent = '';
-            if (outputs.raw) {
-                try {
-                    const parsed = JSON.parse(outputs.raw);
-                    textContent = parsed.result || outputs.raw;
-                } catch {
-                    textContent = outputs.raw;
-                }
-            } else if (outputs.result) {
-                textContent = outputs.result;
-            } else {
-                textContent = 'No text response available.';
-            }
-            document.getElementById('text-response').innerHTML = textContent.replace(/\n/g, '<br>');
-            const diagramSection = document.getElementById('diagram-section');
-            if (outputs.diagram_url) {
-                const img = document.createElement('img');
-                img.src = outputs.diagram_url;
-                img.alt = 'Educational diagram';
-                img.onload = () => {
-                    diagramSection.innerHTML = '';
-                    diagramSection.appendChild(img);
-                    // Show error message if there's a diagram error
-                    if (outputs.diagram_error) {
-                        const errorDiv = document.createElement('div');
-                        errorDiv.style.cssText = 'margin-top: 10px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; color: #856404; font-size: 14px;';
-                        errorDiv.innerHTML = `⚠️ ${outputs.diagram_error}`;
-                        diagramSection.appendChild(errorDiv);
-                    }
-                };
-                img.onerror = () => {
-                    diagramSection.innerHTML = '<p style="color: #666;">❌ Diagram could not be loaded</p>';
-                };
-            } else {
-                diagramSection.innerHTML = '<p style="color: #666;">No diagram available</p>';
-            }
-            const audioSection = document.getElementById('audio-section');
-            if (outputs.audio_url) {
-                const audio = document.createElement('audio');
-                audio.controls = true;
-                audio.className = 'audio-player';
-                audio.src = outputs.audio_url;
-                audio.onloadstart = () => {
-                    audioSection.innerHTML = '';
-                    audioSection.appendChild(audio);
-                };
-                audio.onerror = () => {
-                    audioSection.innerHTML = '<p style="color: #666;">❌ Audio could not be loaded</p>';
-                };
-            } else {
-                audioSection.innerHTML = '<p style="color: #666;">No audio available</p>';
-            }
-            results.style.display = 'block';
-            results.scrollIntoView({ behavior: 'smooth' });
         }
+
+        function displayResults(outputs) {
+            const resultsDiv = document.getElementById('results');
+            const explanationDiv = document.getElementById('explanation');
+            const diagramDiv = document.getElementById('diagram');
+            const audioDiv = document.getElementById('audio');
+            
+            // Display explanation
+            explanationDiv.innerHTML = `<p style="line-height: 1.6; font-size: 1.1rem;">${outputs.result}</p>`;
+            
+            // Display diagram
+            if (outputs.diagram_url && !outputs.diagram_error) {
+                diagramDiv.innerHTML = `<img src="${outputs.diagram_url}" alt="Generated diagram" style="max-width: 100%; border-radius: 10px;">`;
+            } else {
+                diagramDiv.innerHTML = `<p style="color: #666;">No diagram available</p>`;
+            }
+            
+            // Display audio
+            if (outputs.audio_url) {
+                audioDiv.innerHTML = `<audio controls style="width: 100%; max-width: 400px;"><source src="${outputs.audio_url}" type="audio/mpeg">Your browser does not support the audio element.</audio>`;
+            } else {
+                audioDiv.innerHTML = `<p style="color: #666;">No audio available</p>`;
+            }
+            
+            resultsDiv.style.display = 'block';
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function generateQuiz() {
+            if (!authToken) {
+                showError('Please login to generate quizzes.');
+                return;
+            }
+            
+            const explanation = document.getElementById('explanation').textContent;
+            const topic = document.getElementById('topic').value || 'Current Topic';
+            
+            try {
+                const formData = new FormData();
+                formData.append('topic', topic);
+                formData.append('explanation', explanation);
+                formData.append('difficulty', 'medium');
+                formData.append('num_questions', '5');
+                
+                const response = await fetch('/quiz/generate', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showSuccess('Quiz generated! Check your dashboard to take it.');
+                } else {
+                    showError('Failed to generate quiz.');
+                }
+            } catch (error) {
+                console.error('Quiz generation error:', error);
+                showError('Failed to generate quiz.');
+            }
+        }
+
         function showError(message) {
-            const results = document.getElementById('results');
-            results.innerHTML = `<div class="error">${message}</div>`;
-            results.style.display = 'block';
-            results.scrollIntoView({ behavior: 'smooth' });
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        function hideMessages() {
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
         }
     </script>
 </body>
