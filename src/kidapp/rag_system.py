@@ -26,6 +26,8 @@ except ImportError as e:
 class RAGSystem:
     def __init__(self):
         """Initialize the RAG system with vector database and embedding model."""
+        global RAG_AVAILABLE
+        
         if not RAG_AVAILABLE:
             print("⚠️ RAG system disabled - dependencies not available")
             self.client = None
