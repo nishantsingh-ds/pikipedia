@@ -106,10 +106,21 @@ def fast_path_response(topic: str, age: int = None, interests: str = None) -> di
             except:
                 pass
         
+        # Generate diagram and audio for the fast path response
+        dalle_prefix = "Create a simple, colorful diagram for kids that illustrates: "
+        max_explanation_len = 4000 - len(dalle_prefix)
+        dalle_prompt = dalle_prefix + content[:max_explanation_len]
+        diagram_result = generate_diagram_with_dalle(dalle_prompt)
+        
+        # Truncate content for TTS to 4096 characters
+        tts_text = content[:4096]
+        audio_url = generate_audio_with_tts(tts_text)
+        
         return {
             "result": content,
-            "diagram_url": None,
-            "audio_url": None,
+            "diagram_url": diagram_result["diagram_url"],
+            "diagram_error": diagram_result["diagram_error"],
+            "audio_url": audio_url,
             "fast_path": True
         }
         
@@ -132,12 +143,19 @@ def generate_diagram_with_dalle(prompt: str) -> dict:
         
         logger.info(f"🎨 Generating DALL-E diagram with prompt: {prompt[:100]}...")
         client = OpenAI(api_key=openai_api_key)
+        
+        # Add safety check for prompt length
+        if len(prompt) > 4000:
+            prompt = prompt[:4000]
+            logger.info("📝 Truncated DALL-E prompt to fit limits")
+        
         response = client.images.generate(
             model="dall-e-3",
             prompt=prompt,
             n=1,
             size="1024x1024"
         )
+        
         url = getattr(response.data[0], 'url', None)
         if not url:
             logger.error("❌ DALL-E response missing URL")
@@ -149,11 +167,14 @@ def generate_diagram_with_dalle(prompt: str) -> dict:
         # Download and save the image locally
         logger.info(f"📥 Downloading DALL-E image from: {url}")
         try:
-            img_response = requests.get(url)
+            img_response = requests.get(url, timeout=30)  # Add timeout
             if img_response.status_code == 200:
                 # Generate a unique filename
                 img_filename = f"diagram_{uuid.uuid4().hex}.png"
                 img_path = os.path.join(UPLOAD_DIR, img_filename)
+                
+                # Ensure directory exists
+                os.makedirs(UPLOAD_DIR, exist_ok=True)
                 
                 # Save the image
                 with open(img_path, "wb") as f:
@@ -183,7 +204,7 @@ def generate_diagram_with_dalle(prompt: str) -> dict:
         logger.error(f"❌ DALL-E generation failed: {e}")
         return {
             "diagram_url": "https://placehold.co/400x300?text=Generation+Failed",
-            "diagram_error": "Sorry, we couldn't generate a diagram for this topic. Please try a different question!"
+            "diagram_error": f"Sorry, we couldn't generate a diagram. Error: {str(e)}"
         }
 
 def generate_audio_with_tts(text: str) -> str:
@@ -197,6 +218,7 @@ def generate_audio_with_tts(text: str) -> str:
         # Truncate text to fit TTS limits
         if len(text) > 4096:
             text = text[:4096]
+            logger.info("📝 Truncated TTS text to fit limits")
         
         logger.info(f"🔊 Generating TTS audio for text: {text[:100]}...")
         client = OpenAI(api_key=openai_api_key)
@@ -209,6 +231,9 @@ def generate_audio_with_tts(text: str) -> str:
         # Generate a unique filename
         audio_filename = f"audio_{uuid.uuid4().hex}.mp3"
         audio_path = os.path.join(UPLOAD_DIR, audio_filename)
+        
+        # Ensure directory exists
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
         
         # Save the audio file
         response.stream_to_file(audio_path)
