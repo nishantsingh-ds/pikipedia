@@ -107,8 +107,12 @@ def register_user(user_data: UserCreate) -> UserResponse:
         last_login=None
     )
     
-    # Store user (in production, store hashed password separately)
+    # Store user with hashed password (in production, use a proper database)
     memory_storage.users[user_id] = new_user
+    # Store password hash separately (in production, use a proper database)
+    if not hasattr(memory_storage, 'password_hashes'):
+        memory_storage.password_hashes = {}
+    memory_storage.password_hashes[user_id] = hashed_password
     
     return new_user
 
@@ -122,12 +126,23 @@ def authenticate_user(login_data: UserLogin) -> Optional[UserResponse]:
             break
     
     if not user:
+        print(f"DEBUG: User '{login_data.username}' not found")
         return None
     
-    # In production, you'd verify against stored hash
-    # For now, we'll use a simple check (replace with proper password storage)
-    if login_data.password == "password":  # Simple demo - replace with proper auth
+    # Verify password against stored hash
+    if not hasattr(memory_storage, 'password_hashes'):
+        memory_storage.password_hashes = {}
+    
+    stored_hash = memory_storage.password_hashes.get(user.id)
+    if not stored_hash:
+        print(f"DEBUG: No password hash found for user '{login_data.username}'")
+        return None
+    
+    if verify_password(login_data.password, stored_hash):
+        print(f"DEBUG: Password verified for user '{login_data.username}'")
         return user
+    else:
+        print(f"DEBUG: Password verification failed for user '{login_data.username}'")
     
     return None
 
