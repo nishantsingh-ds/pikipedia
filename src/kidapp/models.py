@@ -2,7 +2,7 @@
 Database models for WonderBot - AI-powered educational web app for kids
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 from enum import Enum
@@ -26,7 +26,7 @@ class DifficultyLevel(str, Enum):
 # Pydantic Models for API
 class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
-    email: str = Field(..., regex=r"^[^@]+@[^@]+\.[^@]+$")
+    email: str = Field(..., pattern=r"^[^@]+@[^@]+\.[^@]+$")
     password: str = Field(..., min_length=6)
     age: Optional[int] = Field(None, ge=3, le=18)
     interests: Optional[str] = None
@@ -52,7 +52,7 @@ class SessionData(BaseModel):
     explanation: str
     diagram_url: Optional[str] = None
     audio_url: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     age: Optional[int] = None
     interests: Optional[str] = None
 
@@ -70,7 +70,7 @@ class Quiz(BaseModel):
     topic: str
     questions: List[QuizQuestion]
     difficulty: DifficultyLevel
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     estimated_time: int = Field(..., description="Estimated time in minutes")
 
 class QuizAttempt(BaseModel):
@@ -80,7 +80,7 @@ class QuizAttempt(BaseModel):
     total_questions: int
     correct_answers: int
     time_taken: int  # in seconds
-    completed_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     answers: Dict[str, str] = Field(..., description="Question ID to answer mapping")
 
 class LearningProgress(BaseModel):
@@ -90,7 +90,7 @@ class LearningProgress(BaseModel):
     total_time_spent: int = 0  # in seconds
     quiz_attempts: int = 0
     average_quiz_score: float = 0.0
-    last_accessed: datetime = Field(default_factory=datetime.utcnow)
+    last_accessed: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     mastery_level: float = Field(0.0, ge=0.0, le=1.0, description="0.0 to 1.0 mastery")
 
 class Achievement(BaseModel):

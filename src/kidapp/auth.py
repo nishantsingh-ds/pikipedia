@@ -5,7 +5,7 @@ Authentication system for WonderBot
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -32,9 +32,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """Create a JWT access token."""
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+                        expire = datetime.now(timezone.utc) + expires_delta
+            else:
+                expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -103,7 +103,7 @@ def register_user(user_data: UserCreate) -> UserResponse:
         age=user_data.age,
         interests=user_data.interests,
         role=user_data.role,
-        created_at=datetime.utcnow(),
+                        created_at=datetime.now(timezone.utc),
         last_login=None
     )
     
@@ -142,7 +142,7 @@ def login_user(login_data: UserLogin) -> dict:
         )
     
     # Update last login
-    user.last_login = datetime.utcnow()
+                    user.last_login = datetime.now(timezone.utc)
     memory_storage.users[user.id] = user
     
     # Create access token
