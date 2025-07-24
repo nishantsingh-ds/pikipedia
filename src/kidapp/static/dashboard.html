@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WonderBot Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .quiz-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-list {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .quiz-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .quiz-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #51cf66;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <nav class="nav">
+                <a href="/" class="logo">🎓 WonderBot</a>
+                <div class="nav-links">
+                    <a href="/" class="nav-link">🏠 Home</a>
+                    <a href="/dashboard" class="nav-link">📊 Dashboard</a>
+                    <a href="/quizzes" class="nav-link">🎯 Quizzes</a>
+                    <a href="/progress" class="nav-link">📈 Progress</a>
+                    <a href="/profile" class="nav-link">👤 Profile</a>
+                </div>
+                <div class="user-info">
+                    <span id="username">Loading...</span>
+                    <button class="btn" onclick="logout()">Logout</button>
+                </div>
+            </nav>
+        </header>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>📊 Learning Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="sessions-count">0</div>
+                        <div class="stat-label">Learning Sessions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="quizzes-taken">0</div>
+                        <div class="stat-label">Quizzes Taken</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="avg-score">0%</div>
+                        <div class="stat-label">Average Score</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="time-spent">0h</div>
+                        <div class="stat-label">Time Spent</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎯 Recent Activity</h2>
+                <div id="recent-sessions">
+                    <div class="loading">Loading recent sessions...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="quiz-section">
+            <h2>🎯 Available Quizzes</h2>
+            <div class="quiz-list" id="quiz-list">
+                <div class="loading">Loading quizzes...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let authToken = localStorage.getItem('authToken');
+
+        // Check authentication on page load
+        window.addEventListener('load', async () => {
+            if (!authToken) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Authentication failed');
+                }
+
+                const userData = await response.json();
+                currentUser = userData.user;
+                document.getElementById('username').textContent = currentUser.username;
+                
+                // Load dashboard data
+                loadDashboardData();
+            } catch (error) {
+                console.error('Authentication error:', error);
+                localStorage.removeItem('authToken');
+                window.location.href = '/login.html';
+            }
+        });
+
+        async function loadDashboardData() {
+            try {
+                // Load user sessions
+                const sessionsResponse = await fetch(`/sessions/${currentUser.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (sessionsResponse.ok) {
+                    const sessionsData = await sessionsResponse.json();
+                    updateStats(sessionsData.sessions);
+                    displayRecentSessions(sessionsData.sessions);
+                }
+
+                // Load quiz attempts
+                const attemptsResponse = await fetch(`/quiz/user/${currentUser.id}/attempts`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (attemptsResponse.ok) {
+                    const attemptsData = await attemptsResponse.json();
+                    updateQuizStats(attemptsData.attempts);
+                }
+
+                // Load available quizzes
+                loadAvailableQuizzes();
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        function updateStats(sessions) {
+            document.getElementById('sessions-count').textContent = sessions.length;
+            
+            // Calculate average score from quiz attempts
+            // This would be calculated from quiz attempts data
+        }
+
+        function updateQuizStats(attempts) {
+            document.getElementById('quizzes-taken').textContent = attempts.length;
+            
+            if (attempts.length > 0) {
+                const avgScore = attempts.reduce((sum, attempt) => sum + attempt.score, 0) / attempts.length;
+                document.getElementById('avg-score').textContent = `${Math.round(avgScore)}%`;
+            }
+        }
+
+        function displayRecentSessions(sessions) {
+            const container = document.getElementById('recent-sessions');
+            
+            if (sessions.length === 0) {
+                container.innerHTML = '<p>No learning sessions yet. Start exploring!</p>';
+                return;
+            }
+
+            const recentSessions = sessions.slice(0, 5); // Show last 5 sessions
+            container.innerHTML = recentSessions.map(session => `
+                <div style="padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 10px;">
+                    <strong>${session.topic}</strong><br>
+                    <small>${new Date(session.timestamp).toLocaleDateString()}</small>
+                </div>
+            `).join('');
+        }
+
+        async function loadAvailableQuizzes() {
+            try {
+                // For now, we'll show a placeholder
+                // In a real app, you'd fetch available quizzes from the server
+                const container = document.getElementById('quiz-list');
+                container.innerHTML = `
+                    <div class="quiz-item" onclick="startQuiz('sample-quiz-1')">
+                        <h3>🌍 World Geography Quiz</h3>
+                        <p>Test your knowledge about countries and capitals!</p>
+                        <small>5 questions • Medium difficulty</small>
+                    </div>
+                    <div class="quiz-item" onclick="startQuiz('sample-quiz-2')">
+                        <h3>🔬 Science Explorer Quiz</h3>
+                        <p>Learn about amazing scientific discoveries!</p>
+                        <small>5 questions • Easy difficulty</small>
+                    </div>
+                    <div class="quiz-item" onclick="startQuiz('sample-quiz-3')">
+                        <h3>🐾 Animal Kingdom Quiz</h3>
+                        <p>Discover fascinating facts about animals!</p>
+                        <small>5 questions • Medium difficulty</small>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading quizzes:', error);
+            }
+        }
+
+        function startQuiz(quizId) {
+            // Navigate to quiz page
+            window.location.href = `/quiz.html?id=${quizId}`;
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html> 

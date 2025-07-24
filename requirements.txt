@@ -8,3 +8,6 @@ openai
 python-dotenv
 Pillow
 requests
+PyJWT
+passlib
+bcrypt
