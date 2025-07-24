@@ -46,6 +46,17 @@ app = FastAPI(
     description="AI-powered educational web app for kids with authentication, quizzes, and session management."
 )
 
+# Clear memory storage on startup
+memory_storage.users.clear()
+memory_storage.sessions.clear()
+memory_storage.quizzes.clear()
+memory_storage.quiz_attempts.clear()
+memory_storage.learning_progress.clear()
+memory_storage.achievements.clear()
+if hasattr(memory_storage, 'password_hashes'):
+    memory_storage.password_hashes.clear()
+logger.info("🧹 Memory storage cleared on startup")
+
 # Add CORS middleware for deployment
 app.add_middleware(
     CORSMiddleware,
@@ -76,6 +87,21 @@ app.include_router(quiz_router.router)
 app.include_router(session_router.router)
 
 # ——— Learning Progress Endpoints ———
+
+@app.post("/clear-data", response_class=JSONResponse)
+async def clear_all_data():
+    """Clear all stored data (for testing/debugging)."""
+    memory_storage.users.clear()
+    memory_storage.sessions.clear()
+    memory_storage.quizzes.clear()
+    memory_storage.quiz_attempts.clear()
+    memory_storage.learning_progress.clear()
+    memory_storage.achievements.clear()
+    if hasattr(memory_storage, 'password_hashes'):
+        memory_storage.password_hashes.clear()
+    response_cache.clear()
+    logger.info("🧹 All data cleared")
+    return {"message": "All data cleared successfully"}
 
 @app.get("/learning/progress/{user_id}", response_class=JSONResponse)
 async def get_learning_progress(user_id: str, current_user: UserResponse = Depends(get_current_user)):
@@ -404,7 +430,7 @@ async def generate(
     image: UploadFile = File(None, description="Optional image to analyze"),
     age: int = Form(None, description="Child's age (optional)"),
     interests: str = Form(None, description="Comma-separated interests (optional)"),
-    current_user: Optional[UserResponse] = Depends(get_current_user)
+    current_user: Optional[UserResponse] = None
 ):
     """
     Generate a kid-friendly explanation for either:

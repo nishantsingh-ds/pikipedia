@@ -8,7 +8,7 @@ import uuid
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 
@@ -82,7 +82,7 @@ def verify_token(token: str) -> Optional[dict]:
     except jwt.PyJWTError:
         return None
 
-def get_current_user(credentials: HTTPAuthorizationCredentials) -> UserResponse:
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> UserResponse:
     """Get the current user from the JWT token."""
     token = credentials.credentials
     print(f"DEBUG: Token received: {token[:20]}...")  # Show first 20 chars
