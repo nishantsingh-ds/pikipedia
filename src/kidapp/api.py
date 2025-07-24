@@ -103,6 +103,127 @@ async def clear_all_data():
     logger.info("🧹 All data cleared")
     return {"message": "All data cleared successfully"}
 
+@app.get("/debug/storage", response_class=JSONResponse)
+async def view_memory_storage():
+    """View all data in memory storage (for debugging)."""
+    return {
+        "users": {
+            user_id: {
+                "username": user.username,
+                "email": user.email,
+                "age": user.age,
+                "interests": user.interests,
+                "role": user.role.value if user.role else None,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "last_login": user.last_login.isoformat() if user.last_login else None
+            }
+            for user_id, user in memory_storage.users.items()
+        },
+        "sessions": {
+            user_id: [
+                {
+                    "topic": session.topic,
+                    "explanation": session.explanation[:100] + "..." if len(session.explanation) > 100 else session.explanation,
+                    "diagram_url": session.diagram_url,
+                    "audio_url": session.audio_url,
+                    "timestamp": session.timestamp.isoformat() if session.timestamp else None,
+                    "age": session.age,
+                    "interests": session.interests
+                }
+                for session in sessions
+            ]
+            for user_id, sessions in memory_storage.sessions.items()
+        },
+        "quizzes": {
+            quiz_id: {
+                "title": quiz.title,
+                "topic": quiz.topic,
+                "difficulty": quiz.difficulty.value if quiz.difficulty else None,
+                "questions_count": len(quiz.questions),
+                "created_at": quiz.created_at.isoformat() if quiz.created_at else None
+            }
+            for quiz_id, quiz in memory_storage.quizzes.items()
+        },
+        "quiz_attempts": {
+            user_id: [
+                {
+                    "quiz_id": attempt.quiz_id,
+                    "score": attempt.score,
+                    "total_questions": attempt.total_questions,
+                    "correct_answers": attempt.correct_answers,
+                    "time_taken": attempt.time_taken,
+                    "completed_at": attempt.completed_at.isoformat() if attempt.completed_at else None
+                }
+                for attempt in attempts
+            ]
+            for user_id, attempts in memory_storage.quiz_attempts.items()
+        },
+        "learning_progress": {
+            user_id: {
+                topic: {
+                    "sessions_count": progress.sessions_count,
+                    "total_time_spent": progress.total_time_spent,
+                    "quiz_attempts": progress.quiz_attempts,
+                    "average_quiz_score": progress.average_quiz_score,
+                    "mastery_level": progress.mastery_level,
+                    "last_accessed": progress.last_accessed.isoformat() if progress.last_accessed else None
+                }
+                for topic, progress in user_progress.items()
+            }
+            for user_id, user_progress in memory_storage.learning_progress.items()
+        },
+        "password_hashes": {
+            user_id: hash_value[:20] + "..." if len(hash_value) > 20 else hash_value
+            for user_id, hash_value in (memory_storage.password_hashes.items() if hasattr(memory_storage, 'password_hashes') else {})
+        },
+        "cache_size": len(response_cache),
+        "total_users": len(memory_storage.users),
+        "total_sessions": sum(len(sessions) for sessions in memory_storage.sessions.values()),
+        "total_quizzes": len(memory_storage.quizzes),
+        "total_attempts": sum(len(attempts) for attempts in memory_storage.quiz_attempts.values())
+    }
+
+@app.get("/debug/users", response_class=JSONResponse)
+async def view_users():
+    """View all registered users."""
+    return {
+        "users": [
+            {
+                "id": user_id,
+                "username": user.username,
+                "email": user.email,
+                "age": user.age,
+                "interests": user.interests,
+                "role": user.role.value if user.role else None,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "last_login": user.last_login.isoformat() if user.last_login else None
+            }
+            for user_id, user in memory_storage.users.items()
+        ],
+        "total_users": len(memory_storage.users)
+    }
+
+@app.get("/debug/sessions/{user_id}", response_class=JSONResponse)
+async def view_user_sessions(user_id: str):
+    """View all sessions for a specific user."""
+    sessions = memory_storage.sessions.get(user_id, [])
+    return {
+        "user_id": user_id,
+        "sessions": [
+            {
+                "topic": session.topic,
+                "explanation": session.explanation,
+                "diagram_url": session.diagram_url,
+                "audio_url": session.audio_url,
+                "timestamp": session.timestamp.isoformat() if session.timestamp else None,
+                "age": session.age,
+                "interests": session.interests
+            }
+            for session in sessions
+        ],
+        "total_sessions": len(sessions)
+    }
+
 @app.get("/learning/progress/{user_id}", response_class=JSONResponse)
 async def get_learning_progress(user_id: str, current_user: UserResponse = Depends(get_current_user)):
     """Get learning progress for a user."""
