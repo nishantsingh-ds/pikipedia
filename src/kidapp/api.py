@@ -128,6 +128,82 @@ def fast_path_response(topic: str, age: int = None, interests: str = None) -> di
         logger.error(f"Fast path failed: {e}")
         return None
 
+def fast_path_image_analysis(image_path: str, age: int = None, interests: str = None) -> dict:
+    """Generate a quick response for image analysis using direct OpenAI Vision API call."""
+    try:
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            return {"error": "OpenAI API key not configured"}
+        
+        client = OpenAI(api_key=openai_api_key)
+        
+        # Create a simple, direct prompt
+        age_context = f" for a {age}-year-old child" if age else " for children aged 6-12"
+        interests_context = f" who loves {interests}" if interests else ""
+        
+        prompt = f"""You are a friendly teacher explaining things to kids. 
+        Look at this image and explain what you see in a simple, fun way{age_context}{interests_context}.
+        
+        Keep it short (2-3 sentences), friendly, and easy to understand. 
+        Use simple words and maybe a fun example."""
+        
+        # Read the image file
+        with open(image_path, "rb") as image_file:
+            response = client.chat.completions.create(
+                model="gpt-4-vision-preview",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64.b64encode(image_file.read()).decode('utf-8')}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=150,
+                temperature=0.7
+            )
+        
+        content = response.choices[0].message.content.strip()
+        
+        # Clean up any JSON formatting if present
+        if content.startswith('{"') or content.startswith('{'):
+            try:
+                parsed = json.loads(content)
+                if 'result' in parsed:
+                    content = parsed['result']
+                elif 'content' in parsed:
+                    content = parsed['content']
+            except:
+                pass
+        
+        # Generate diagram and audio for the fast path response
+        dalle_prefix = "Create a simple, colorful diagram for kids that illustrates: "
+        max_explanation_len = 4000 - len(dalle_prefix)
+        dalle_prompt = dalle_prefix + content[:max_explanation_len]
+        diagram_result = generate_diagram_with_dalle(dalle_prompt)
+        
+        # Truncate content for TTS to 4096 characters
+        tts_text = content[:4096]
+        audio_url = generate_audio_with_tts(tts_text)
+        
+        return {
+            "result": content,
+            "diagram_url": diagram_result["diagram_url"],
+            "diagram_error": diagram_result["diagram_error"],
+            "audio_url": audio_url,
+            "fast_path": True
+        }
+        
+    except Exception as e:
+        logger.error(f"Fast path image analysis failed: {e}")
+        return None
+
 # Note: Image analysis is now handled by CrewAI agents instead of direct OpenAI calls
 
 def generate_diagram_with_dalle(prompt: str) -> dict:
@@ -331,7 +407,23 @@ async def generate(
         except Exception:
             logger.exception("❌ Failed to open/dump the uploaded image")
 
-        # Use CrewAI workflow for image analysis
+        # Check cache for image analysis (using file hash as key)
+        image_cache_key = f"image_{md5}_{age}_{interests}"
+        if image_cache_key in response_cache:
+            logger.info("🚀 Returning cached image analysis response")
+            return {"outputs": response_cache[image_cache_key]}
+        
+        # Try fast path for image analysis first
+        logger.info("⚡ Trying fast path for image analysis...")
+        fast_result = fast_path_image_analysis(fpath, age, interests)
+        if fast_result and not fast_result.get("error"):
+            logger.info("✅ Fast path image analysis completed successfully")
+            # Cache the result
+            response_cache[image_cache_key] = fast_result
+            return {"outputs": fast_result}
+        
+        # Fallback to CrewAI workflow if fast path fails
+        logger.info("🔄 Fast path failed, falling back to CrewAI workflow...")
         inputs = {"image_path": fpath, "mode": "image_analysis", "age": age, "interests": interests}
         logger.info(f"🚀 Starting CrewAI image analysis workflow with inputs: {inputs}")
         try:
@@ -363,6 +455,10 @@ async def generate(
                 "diagram_error": diagram_result["diagram_error"],
                 "audio_url": audio_url
             }
+            
+            # Cache the result
+            response_cache[image_cache_key] = final_result
+            
             logger.info("🎉 Image analysis multimodal processing completed")
             
         except Exception as e:
