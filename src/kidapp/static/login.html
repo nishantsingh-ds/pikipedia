@@ -218,7 +218,7 @@
         window.addEventListener('load', () => {
             const authToken = localStorage.getItem('authToken');
             if (authToken) {
-                window.location.href = '/dashboard.html';
+                window.location.href = '/dashboard';
             }
         });
 
@@ -264,7 +264,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     localStorage.setItem('authToken', data.access_token);
-                    window.location.href = '/dashboard.html';
+                    window.location.href = '/dashboard';
                 } else {
                     const errorData = await response.json();
                     errorDiv.textContent = errorData.detail || 'Login failed';
