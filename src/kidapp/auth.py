@@ -85,30 +85,39 @@ def verify_token(token: str) -> Optional[dict]:
 def get_current_user(credentials: HTTPAuthorizationCredentials) -> UserResponse:
     """Get the current user from the JWT token."""
     token = credentials.credentials
+    print(f"DEBUG: Token received: {token[:20]}...")  # Show first 20 chars
+    
     payload = verify_token(token)
     if payload is None:
+        print("DEBUG: Token verification failed")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    print(f"DEBUG: Token payload: {payload}")
     
     user_id = payload.get("sub")
     if user_id is None:
+        print("DEBUG: No 'sub' field in token payload")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    print(f"DEBUG: Looking for user with ID: {user_id}")
     user = memory_storage.users.get(user_id)
     if user is None:
+        print(f"DEBUG: User not found in memory storage. Available users: {list(memory_storage.users.keys())}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    print(f"DEBUG: User found: {user.username}")
     return user
 
 def register_user(user_data: UserCreate) -> UserResponse:

@@ -36,4 +36,5 @@ async def login(login_data: UserLogin):
 @router.get("/me", response_class=JSONResponse)
 async def get_current_user_info(current_user: UserResponse = Depends(get_current_user)):
     """Get current user information."""
+    print(f"DEBUG: /auth/me called for user: {current_user.username} (ID: {current_user.id})")
     return {"user": current_user} 
