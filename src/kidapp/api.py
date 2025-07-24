@@ -704,7 +704,7 @@ async def generate(
                 "diagram_url": diagram_result["diagram_url"],
                 "diagram_error": diagram_result["diagram_error"],
                 "audio_url": audio_url,
-                "sources": [f"RAG: {source['category']} - {source['topic']}" for source in rag_result["sources"]],
+                "sources": [f"RAG: {source['category']} - {source['topic']}" for source in rag_result["sources"]] if rag_result["sources"] else ["Basic Response"],
                 "confidence": rag_result["confidence"]
             }
             

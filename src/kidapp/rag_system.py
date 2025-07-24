@@ -7,34 +7,59 @@ import json
 import uuid
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-import chromadb
-from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
-import numpy as np
-from openai import OpenAI
+
+# Try to import RAG dependencies, with fallback
+try:
+    import chromadb
+    from chromadb.config import Settings
+    from sentence_transformers import SentenceTransformer
+    import numpy as np
+    from openai import OpenAI
+    RAG_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ RAG dependencies not available: {e}")
+    print("🔧 Falling back to basic response generation")
+    RAG_AVAILABLE = False
 
 class RAGSystem:
     def __init__(self):
         """Initialize the RAG system with vector database and embedding model."""
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        
-        # Initialize embedding model for child-friendly content
-        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-        
-        # Initialize ChromaDB for vector storage
-        self.chroma_client = chromadb.PersistentClient(
-            path="./chroma_db",
-            settings=Settings(anonymized_telemetry=False)
-        )
-        
-        # Create or get collection
-        self.collection = self.chroma_client.get_or_create_collection(
-            name="wonderbot_knowledge",
-            metadata={"description": "Educational content for WonderBot RAG system"}
-        )
-        
-        # Initialize with educational content
-        self._initialize_knowledge_base()
+        if not RAG_AVAILABLE:
+            print("⚠️ RAG system disabled - dependencies not available")
+            self.client = None
+            self.embedding_model = None
+            self.chroma_client = None
+            self.collection = None
+            return
+            
+        try:
+            self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            
+            # Initialize embedding model for child-friendly content
+            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+            
+            # Initialize ChromaDB for vector storage
+            self.chroma_client = chromadb.PersistentClient(
+                path="./chroma_db",
+                settings=Settings(anonymized_telemetry=False)
+            )
+            
+            # Create or get collection
+            self.collection = self.chroma_client.get_or_create_collection(
+                name="wonderbot_knowledge",
+                metadata={"description": "Educational content for WonderBot RAG system"}
+            )
+            
+            # Initialize with educational content
+            self._initialize_knowledge_base()
+            
+        except Exception as e:
+            print(f"❌ Error initializing RAG system: {e}")
+            RAG_AVAILABLE = False
+            self.client = None
+            self.embedding_model = None
+            self.chroma_client = None
+            self.collection = None
     
     def _initialize_knowledge_base(self):
         """Initialize the knowledge base with educational content."""
@@ -120,6 +145,10 @@ class RAGSystem:
     
     def retrieve_relevant_context(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         """Retrieve relevant context for a given query."""
+        if not RAG_AVAILABLE or not self.collection:
+            print("⚠️ RAG system not available, returning empty context")
+            return []
+            
         try:
             # Generate query embedding
             query_embedding = self.embedding_model.encode([query])
@@ -148,6 +177,14 @@ class RAGSystem:
     
     def generate_rag_response(self, query: str, age: Optional[int] = None, interests: Optional[str] = None) -> Dict[str, Any]:
         """Generate a response using RAG with retrieved context."""
+        if not RAG_AVAILABLE or not self.client:
+            print("⚠️ RAG system not available, using fallback response")
+            return {
+                "response": "I'm here to help you learn! What would you like to know about?",
+                "sources": [],
+                "confidence": 0.5
+            }
+            
         try:
             # Retrieve relevant context
             contexts = self.retrieve_relevant_context(query)
@@ -238,6 +275,14 @@ Keep your response under 200 words and make it engaging for a child."""
     
     def get_knowledge_stats(self) -> Dict[str, Any]:
         """Get statistics about the knowledge base."""
+        if not RAG_AVAILABLE or not self.collection:
+            return {
+                "status": "disabled",
+                "message": "RAG system not available - dependencies missing",
+                "total_documents": 0,
+                "categories": {}
+            }
+            
         try:
             total_docs = self.collection.count()
             
@@ -250,6 +295,7 @@ Keep your response under 200 words and make it engaging for a child."""
                 categories[category] = categories.get(category, 0) + 1
             
             return {
+                "status": "active",
                 "total_documents": total_docs,
                 "categories": categories,
                 "collection_name": self.collection.name
