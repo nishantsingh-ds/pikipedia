@@ -782,6 +782,12 @@ async def login_page():
     with open("src/kidapp/static/login.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
+@app.get("/quiz", response_class=HTMLResponse)
+async def quiz_page():
+    """Serve the quiz page."""
+    with open("src/kidapp/static/quiz.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
 @app.get("/debug", response_class=HTMLResponse)
 async def debug_page():
     """Simple debug page to view memory storage data."""

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WonderBot Quiz</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .quiz-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .question {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            background: white;
+        }
+
+        .question h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+
+        .option.correct {
+            border-color: #4caf50;
+            background: #e8f5e8;
+        }
+
+        .option.incorrect {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e1e5e9;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .results {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .feedback {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .navigation {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌟 WonderBot Quiz</h1>
+            <p>Test your knowledge and learn more!</p>
+        </div>
+        
+        <div class="content">
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Loading quiz...</p>
+            </div>
+
+            <div id="quiz-container" style="display: none;">
+                <div class="quiz-info">
+                    <h2 id="quiz-title">Quiz Title</h2>
+                    <p id="quiz-description">Test your knowledge!</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p>Question <span id="current-question">1</span> of <span id="total-questions">5</span></p>
+                </div>
+
+                <div id="question-container">
+                    <!-- Questions will be loaded here -->
+                </div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" id="prev-btn" onclick="previousQuestion()">Previous</button>
+                    <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()">Next</button>
+                    <button class="btn btn-primary" id="submit-btn" onclick="submitQuiz()" style="display: none;">Submit Quiz</button>
+                </div>
+            </div>
+
+            <div id="results" class="results" style="display: none;">
+                <div class="score" id="score-display">85%</div>
+                <div class="feedback" id="feedback-text">Great job! You're doing amazing!</div>
+                <div class="navigation">
+                    <button class="btn btn-primary" onclick="window.location.href='/dashboard'">Back to Dashboard</button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/'">Ask More Questions</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuiz = null;
+        let currentQuestionIndex = 0;
+        let userAnswers = {};
+        let quizCompleted = false;
+
+        // Get quiz ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const quizId = urlParams.get('id');
+
+        // Check authentication
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            window.location.href = '/login';
+        }
+
+        // Load quiz data
+        async function loadQuiz() {
+            try {
+                // For demo purposes, create a sample quiz
+                // In a real app, you'd fetch from the server
+                currentQuiz = {
+                    id: quizId || 'demo-quiz',
+                    title: 'Science Explorer Quiz',
+                    description: 'Test your knowledge about amazing scientific discoveries!',
+                    questions: [
+                        {
+                            id: '1',
+                            question: 'What is the largest planet in our solar system?',
+                            question_type: 'multiple_choice',
+                            options: ['Earth', 'Mars', 'Jupiter', 'Saturn'],
+                            correct_answer: 'Jupiter',
+                            explanation: 'Jupiter is the largest planet in our solar system!'
+                        },
+                        {
+                            id: '2',
+                            question: 'True or False: The sun is a star.',
+                            question_type: 'true_false',
+                            options: ['True', 'False'],
+                            correct_answer: 'True',
+                            explanation: 'Yes! The sun is a star that provides light and heat to Earth.'
+                        },
+                        {
+                            id: '3',
+                            question: 'What do plants need to make their own food?',
+                            question_type: 'multiple_choice',
+                            options: ['Water only', 'Sunlight only', 'Water and sunlight', 'None of the above'],
+                            correct_answer: 'Water and sunlight',
+                            explanation: 'Plants use sunlight and water to make their own food through photosynthesis!'
+                        },
+                        {
+                            id: '4',
+                            question: 'Fill in the blank: The process of water changing from liquid to gas is called _______.',
+                            question_type: 'fill_blank',
+                            correct_answer: 'evaporation',
+                            explanation: 'Evaporation is when liquid water turns into water vapor (gas).'
+                        },
+                        {
+                            id: '5',
+                            question: 'Which animal can change its color to blend in with its surroundings?',
+                            question_type: 'multiple_choice',
+                            options: ['Lion', 'Chameleon', 'Elephant', 'Giraffe'],
+                            correct_answer: 'Chameleon',
+                            explanation: 'Chameleons can change their color to camouflage and communicate!'
+                        }
+                    ]
+                };
+
+                displayQuiz();
+            } catch (error) {
+                console.error('Error loading quiz:', error);
+                document.getElementById('loading').innerHTML = '<p>Error loading quiz. Please try again.</p>';
+            }
+        }
+
+        function displayQuiz() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('quiz-container').style.display = 'block';
+            
+            document.getElementById('quiz-title').textContent = currentQuiz.title;
+            document.getElementById('quiz-description').textContent = currentQuiz.description;
+            document.getElementById('total-questions').textContent = currentQuiz.questions.length;
+            
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            const question = currentQuiz.questions[currentQuestionIndex];
+            const container = document.getElementById('question-container');
+            
+            document.getElementById('current-question').textContent = currentQuestionIndex + 1;
+            
+            let optionsHtml = '';
+            if (question.question_type === 'multiple_choice' || question.question_type === 'true_false') {
+                question.options.forEach((option, index) => {
+                    const isSelected = userAnswers[question.id] === option;
+                    optionsHtml += `
+                        <div class="option ${isSelected ? 'selected' : ''}" onclick="selectAnswer('${question.id}', '${option}')">
+                            ${option}
+                        </div>
+                    `;
+                });
+            } else if (question.question_type === 'fill_blank') {
+                optionsHtml = `
+                    <input type="text" placeholder="Type your answer here..." 
+                           value="${userAnswers[question.id] || ''}" 
+                           onchange="selectAnswer('${question.id}', this.value)"
+                           style="width: 100%; padding: 15px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 16px;">
+                `;
+            }
+            
+            container.innerHTML = `
+                <div class="question">
+                    <h3>${question.question}</h3>
+                    <div class="options">
+                        ${optionsHtml}
+                    </div>
+                    <div class="explanation" id="explanation-${question.id}">
+                        <strong>Explanation:</strong> ${question.explanation}
+                    </div>
+                </div>
+            `;
+            
+            updateNavigation();
+        }
+
+        function selectAnswer(questionId, answer) {
+            userAnswers[questionId] = answer;
+            
+            // Update visual selection
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.classList.remove('selected');
+                if (option.textContent.trim() === answer) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            updateNavigation();
+        }
+
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            prevBtn.style.display = currentQuestionIndex === 0 ? 'none' : 'inline-block';
+            
+            if (currentQuestionIndex === currentQuiz.questions.length - 1) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'inline-block';
+                submitBtn.style.display = 'none';
+            }
+            
+            // Update progress bar
+            const progress = ((currentQuestionIndex + 1) / currentQuiz.questions.length) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < currentQuiz.questions.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion();
+            }
+        }
+
+        function submitQuiz() {
+            if (quizCompleted) return;
+            
+            quizCompleted = true;
+            
+            // Calculate score
+            let correctAnswers = 0;
+            currentQuiz.questions.forEach(question => {
+                const userAnswer = userAnswers[question.id];
+                if (userAnswer && userAnswer.toLowerCase() === question.correct_answer.toLowerCase()) {
+                    correctAnswers++;
+                }
+            });
+            
+            const score = Math.round((correctAnswers / currentQuiz.questions.length) * 100);
+            
+            // Show results
+            document.getElementById('quiz-container').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            
+            document.getElementById('score-display').textContent = score + '%';
+            
+            let feedback = '';
+            if (score >= 90) {
+                feedback = 'Excellent! You\'re a science superstar! 🌟';
+            } else if (score >= 80) {
+                feedback = 'Great job! You know your science! 🎉';
+            } else if (score >= 70) {
+                feedback = 'Good work! Keep learning and exploring! 📚';
+            } else if (score >= 60) {
+                feedback = 'Not bad! Practice makes perfect! 💪';
+            } else {
+                feedback = 'Keep trying! Learning is a journey! 🌱';
+            }
+            
+            document.getElementById('feedback-text').textContent = feedback;
+            
+            // Save quiz attempt (if authenticated)
+            if (authToken) {
+                saveQuizAttempt(score, correctAnswers, currentQuiz.questions.length);
+            }
+        }
+
+        async function saveQuizAttempt(score, correctAnswers, totalQuestions) {
+            try {
+                const response = await fetch('/quiz/attempt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        quiz_id: currentQuiz.id,
+                        score: score,
+                        correct_answers: correctAnswers,
+                        total_questions: totalQuestions,
+                        answers: userAnswers
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('Quiz attempt saved successfully');
+                }
+            } catch (error) {
+                console.error('Error saving quiz attempt:', error);
+            }
+        }
+
+        // Load quiz when page loads
+        window.addEventListener('load', loadQuiz);
+    </script>
+</body>
+</html> 
