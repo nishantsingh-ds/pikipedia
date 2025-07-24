@@ -8,9 +8,6 @@ import uuid
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
-# Initialize RAG_AVAILABLE in global scope
-RAG_AVAILABLE = False
-
 # Try to import RAG dependencies, with fallback
 try:
     import chromadb
@@ -26,9 +23,10 @@ except ImportError as e:
 class RAGSystem:
     def __init__(self):
         """Initialize the RAG system with vector database and embedding model."""
-        global RAG_AVAILABLE
+        # Check if RAG is available using globals() to avoid UnboundLocalError
+        rag_available = globals().get('RAG_AVAILABLE', False)
         
-        if not RAG_AVAILABLE:
+        if not rag_available:
             print("⚠️ RAG system disabled - dependencies not available")
             self.client = None
             self.embedding_model = None
@@ -56,7 +54,7 @@ class RAGSystem:
             
         except Exception as e:
             print(f"❌ Error initializing RAG system: {e}")
-            RAG_AVAILABLE = False
+            globals()['RAG_AVAILABLE'] = False
             self.client = None
             self.chroma_client = None
             self.collection = None
@@ -145,7 +143,8 @@ class RAGSystem:
     
     def retrieve_relevant_context(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         """Retrieve relevant context for a given query."""
-        if not RAG_AVAILABLE or not self.collection:
+        rag_available = globals().get('RAG_AVAILABLE', False)
+        if not rag_available or not self.collection:
             print("⚠️ RAG system not available, returning empty context")
             return []
             
@@ -176,7 +175,8 @@ class RAGSystem:
     
     def generate_rag_response(self, query: str, age: Optional[int] = None, interests: Optional[str] = None) -> Dict[str, Any]:
         """Generate a response using RAG with retrieved context."""
-        if not RAG_AVAILABLE or not self.client:
+        rag_available = globals().get('RAG_AVAILABLE', False)
+        if not rag_available or not self.client:
             print("⚠️ RAG system not available, using fallback response")
             return {
                 "response": "I'm here to help you learn! What would you like to know about?",
@@ -274,7 +274,8 @@ Keep your response under 200 words and make it engaging for a child."""
     
     def get_knowledge_stats(self) -> Dict[str, Any]:
         """Get statistics about the knowledge base."""
-        if not RAG_AVAILABLE or not self.collection:
+        rag_available = globals().get('RAG_AVAILABLE', False)
+        if not rag_available or not self.collection:
             return {
                 "status": "disabled",
                 "message": "RAG system not available - dependencies missing",

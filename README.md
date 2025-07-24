@@ -22,24 +22,24 @@ WonderBot is an intelligent educational application that uses AI agents to expla
 ### Installation
 
 1. **Clone the repository**
-   ```bash
+```bash
    git clone <your-repo-url>
-   cd wonderbot
+cd wonderbot
    ```
 
 2. **Install dependencies**
    ```bash
-   pip install -r requirements.txt
-   ```
+pip install -r requirements.txt
+```
 
 3. **Set up environment variables**
-   Create a `.env` file in the root directory:
+Create a `.env` file in the root directory:
    ```env
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
+OPENAI_API_KEY=your_openai_api_key_here
+```
 
 4. **Run the application**
-   ```bash
+```bash
    uvicorn src.kidapp.api:app --reload --host 0.0.0.0 --port 8000
    ```
 
