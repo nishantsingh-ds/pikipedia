@@ -611,6 +611,23 @@ async def generate(
             # Cache the result
             response_cache[image_cache_key] = fast_result
             
+            # Generate quiz automatically for authenticated users (fast path image analysis)
+            quiz_id = None
+            if current_user:
+                try:
+                    from .quiz_generator import generate_quiz_from_explanation, save_quiz_to_memory
+                    quiz = generate_quiz_from_explanation(
+                        explanation=fast_result["result"],
+                        topic=f"Image Analysis: {image.filename}",
+                        difficulty=DifficultyLevel.MEDIUM,
+                        num_questions=5
+                    )
+                    save_quiz_to_memory(quiz)
+                    quiz_id = quiz.id
+                    logger.info(f"🎯 Generated quiz {quiz_id} for fast path image analysis: {image.filename}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to generate quiz for fast path image: {e}")
+            
             # Save session data if user is authenticated
             if current_user:
                 session_router.save_session_data(
@@ -623,6 +640,8 @@ async def generate(
                     interests=interests
                 )
             
+            # Add quiz_id to fast result
+            fast_result["quiz_id"] = quiz_id
             return {"outputs": fast_result}
         
         # Fallback to CrewAI workflow if fast path fails
@@ -656,11 +675,29 @@ async def generate(
                 "result": explanation,
                 "diagram_url": diagram_result["diagram_url"],
                 "diagram_error": diagram_result["diagram_error"],
-                "audio_url": audio_url
+                "audio_url": audio_url,
+                "quiz_id": quiz_id
             }
             
             # Cache the result
             response_cache[image_cache_key] = final_result
+            
+            # Generate quiz automatically for authenticated users (image analysis)
+            quiz_id = None
+            if current_user:
+                try:
+                    from .quiz_generator import generate_quiz_from_explanation, save_quiz_to_memory
+                    quiz = generate_quiz_from_explanation(
+                        explanation=explanation,
+                        topic=f"Image Analysis: {image.filename}",
+                        difficulty=DifficultyLevel.MEDIUM,
+                        num_questions=5
+                    )
+                    save_quiz_to_memory(quiz)
+                    quiz_id = quiz.id
+                    logger.info(f"🎯 Generated quiz {quiz_id} for image analysis: {image.filename}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to generate quiz for image: {e}")
             
             # Save session data if user is authenticated
             if current_user:
@@ -705,19 +742,37 @@ async def generate(
                 "diagram_error": diagram_result["diagram_error"],
                 "audio_url": audio_url,
                 "sources": [f"RAG: {source['category']} - {source['topic']}" for source in rag_result["sources"]] if rag_result["sources"] else ["Basic Response"],
-                "confidence": rag_result["confidence"]
+                "confidence": rag_result["confidence"],
+                "quiz_id": quiz_id
             }
             
             # Cache the result
             cache_key = f"{topic}_{age}_{interests}"
             response_cache[cache_key] = final_result
             
+            # Generate quiz automatically for authenticated users
+            quiz_id = None
+            if current_user:
+                try:
+                    from .quiz_generator import generate_quiz_from_explanation, save_quiz_to_memory
+                    quiz = generate_quiz_from_explanation(
+                        explanation=rag_result["response"],
+                        topic=topic,
+                        difficulty=DifficultyLevel.MEDIUM,
+                        num_questions=5
+                    )
+                    save_quiz_to_memory(quiz)
+                    quiz_id = quiz.id
+                    logger.info(f"🎯 Generated quiz {quiz_id} for topic: {topic}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to generate quiz: {e}")
+            
             # Save session data if user is authenticated
             if current_user:
                 session_router.save_session_data(
                     user_id=current_user.id,
                     topic=topic,
-                    explanation=explanation,
+                    explanation=rag_result["response"],
                     diagram_url=diagram_result["diagram_url"],
                     audio_url=audio_url,
                     age=age,
