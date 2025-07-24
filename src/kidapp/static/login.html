@@ -214,6 +214,73 @@
     </div>
 
     <script>
+        // Password strength validation
+        function checkPasswordStrength(password) {
+            let score = 0;
+            let feedback = [];
+            
+            if (password.length >= 8) score += 1;
+            if (password.length >= 12) score += 1;
+            if (/[A-Z]/.test(password)) score += 1;
+            if (/[a-z]/.test(password)) score += 1;
+            if (/\d/.test(password)) score += 1;
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score += 1;
+            
+            // Check for common patterns
+            const commonPatterns = ['password', '123456', 'qwerty', 'admin', 'user'];
+            if (commonPatterns.some(pattern => password.toLowerCase().includes(pattern))) {
+                score = Math.max(0, score - 2);
+                feedback.push("Avoid common patterns");
+            }
+            
+            let strength = 'weak';
+            let strengthClass = 'strength-weak';
+            let strengthText = 'Very weak password';
+            
+            if (score >= 5) {
+                strength = 'strong';
+                strengthClass = 'strength-strong';
+                strengthText = 'Strong password!';
+            } else if (score >= 4) {
+                strength = 'good';
+                strengthClass = 'strength-good';
+                strengthText = 'Good password';
+            } else if (score >= 3) {
+                strength = 'fair';
+                strengthClass = 'strength-fair';
+                strengthText = 'Fair password';
+            } else {
+                strength = 'weak';
+                strengthClass = 'strength-weak';
+                strengthText = 'Weak password';
+            }
+            
+            return { score, strength, strengthClass, strengthText, feedback };
+        }
+        
+        function updatePasswordStrength(password) {
+            const strengthFill = document.getElementById('strength-fill');
+            const strengthText = document.getElementById('strength-text');
+            
+            if (!password) {
+                strengthFill.className = 'strength-fill';
+                strengthText.textContent = 'Enter a password';
+                strengthText.className = 'strength-text';
+                return;
+            }
+            
+            const result = checkPasswordStrength(password);
+            
+            strengthFill.className = `strength-fill ${result.strengthClass}`;
+            strengthText.textContent = result.strengthText;
+            strengthText.className = `strength-text ${result.strengthClass}`;
+        }
+        
+        // Add password strength listener
+        document.getElementById('register-password').addEventListener('input', function() {
+            updatePasswordStrength(this.value);
+        });
+
         // Check if user is already logged in
         window.addEventListener('load', () => {
             const authToken = localStorage.getItem('authToken');
@@ -291,6 +358,14 @@
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
             
+            // Check password strength before submitting
+            const passwordCheck = checkPasswordStrength(password);
+            if (passwordCheck.score < 3) {
+                errorDiv.textContent = 'Please choose a stronger password. ' + passwordCheck.feedback.join(', ');
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
             try {
                 const response = await fetch('/auth/register', {
                     method: 'POST',
@@ -313,6 +388,7 @@
                     
                     // Clear form
                     event.target.reset();
+                    updatePasswordStrength('');
                     
                     // Switch to login form after a delay
                     setTimeout(() => {
