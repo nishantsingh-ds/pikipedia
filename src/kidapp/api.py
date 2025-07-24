@@ -150,7 +150,7 @@ def fast_path_image_analysis(image_path: str, age: int = None, interests: str = 
         # Read the image file
         with open(image_path, "rb") as image_file:
             response = client.chat.completions.create(
-                model="gpt-4-vision-preview",
+                model="gpt-4o",
                 messages=[
                     {
                         "role": "user",
