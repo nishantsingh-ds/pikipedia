@@ -1,14 +1,5 @@
-.env
-__pycache__/
-.DS_Store
-
-# Virtual environments
-venv/
-.venv/
-env/
-ENV/
-
 # Python
+__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -28,24 +19,43 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS
-Thumbs.db
-ehthumbs.db
-Desktop.ini
+*~
 
 # Logs
 *.log
+logs/
 
-# Uploaded files (keep the directory but ignore contents)
-uploaded_images/*
-!uploaded_images/.gitkeep
+# Generated files
+uploaded_images/
+generated_diagrams/
+generated_audio/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp3
+*.wav
 
-# Debug files
-debug_upload.png
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ChromaDB vector database
+chroma_db/

@@ -34,6 +34,7 @@ from .quiz_generator import generate_quiz_from_explanation, save_quiz_to_memory,
 from .routers import auth_router, quiz_router, session_router
 from openai import OpenAI
 import base64
+from .rag_system import rag_system
 
 # ——— Logging setup ———
 logging.basicConfig(level=logging.INFO)
@@ -683,60 +684,28 @@ async def generate(
             )
         return {"outputs": final_result}
     elif topic:
-        # Check if this is a simple question for fast path
-        if is_simple_question(topic):
-            logger.info("⚡ Using fast path for simple question")
-            fast_result = fast_path_response(topic, age, interests)
-            if fast_result and not fast_result.get("error"):
-                # Cache the result
-                cache_key = f"{topic}_{age}_{interests}"
-                response_cache[cache_key] = fast_result
-                
-                # Save session data if user is authenticated
-                if current_user:
-                    session_router.save_session_data(
-                        user_id=current_user.id,
-                        topic=topic,
-                        explanation=fast_result["result"],
-                        diagram_url=fast_result["diagram_url"],
-                        audio_url=fast_result["audio_url"],
-                        age=age,
-                        interests=interests
-                    )
-                
-                return {"outputs": fast_result}
-        
-        # Text mode - use CrewAI workflow
-        inputs = {"topic": topic, "age": age, "interests": interests}
-        logger.info(f"🚀 Starting CrewAI workflow with inputs: {inputs}")
+        # Try RAG first for better accuracy and context
+        logger.info("🔍 Using RAG system for enhanced response")
         try:
-            logger.info("📋 Creating CrewAI instance...")
-            crew_instance = KidSafeAppCrew()
-            crew_instance._inputs = inputs
-            logger.info("🔧 Building crew...")
-            crew = crew_instance.crew()
-            logger.info("⚡ Starting crew.kickoff()...")
-            result = crew.kickoff(inputs=inputs)
-            logger.info("✅ CrewAI completed successfully")
-            
-            # Clean the result to get just the content
-            explanation = clean_crewai_result(result)
+            rag_result = rag_system.generate_rag_response(topic, age, interests)
             
             # Generate diagram and audio
             dalle_prefix = "Create a simple, colorful diagram for kids that illustrates: "
             max_explanation_len = 4000 - len(dalle_prefix)
-            dalle_prompt = dalle_prefix + explanation[:max_explanation_len]
+            dalle_prompt = dalle_prefix + rag_result["response"][:max_explanation_len]
             diagram_result = generate_diagram_with_dalle(dalle_prompt)
             
             # Truncate explanation for TTS to 4096 characters
-            tts_text = explanation[:4096]
+            tts_text = rag_result["response"][:4096]
             audio_url = generate_audio_with_tts(tts_text)
             
             final_result = {
-                "result": explanation,
+                "result": rag_result["response"],
                 "diagram_url": diagram_result["diagram_url"],
                 "diagram_error": diagram_result["diagram_error"],
-                "audio_url": audio_url
+                "audio_url": audio_url,
+                "sources": [f"RAG: {source['category']} - {source['topic']}" for source in rag_result["sources"]],
+                "confidence": rag_result["confidence"]
             }
             
             # Cache the result
@@ -820,6 +789,17 @@ async def debug_page():
         </div>
 
         <div class="section">
+            <h2>🧠 RAG Knowledge Base</h2>
+            <div class="stats">
+                <p><strong>RAG System:</strong> Active</p>
+                <p><strong>Vector Database:</strong> ChromaDB</p>
+                <p><strong>Embedding Model:</strong> all-MiniLM-L6-v2</p>
+                <button onclick="window.open('/rag/stats', '_blank')">View RAG Stats</button>
+                <button onclick="window.open('/rag/search?query=solar system', '_blank')">Test RAG Search</button>
+            </div>
+        </div>
+
+        <div class="section">
             <h2>👥 Registered Users</h2>
             <div id="users">
                 {chr(10).join(f'<div class="user"><strong>{user.username}</strong> ({user.email}) - Age: {user.age or "N/A"} - Interests: {user.interests or "N/A"}</div>' for user in memory_storage.users.values())}
@@ -857,3 +837,32 @@ async def debug_page():
     </html>
     """
     return HTMLResponse(content=html_content)
+
+@app.get("/rag/stats", response_class=JSONResponse)
+async def get_rag_stats():
+    """Get RAG system statistics."""
+    return rag_system.get_knowledge_stats()
+
+@app.post("/rag/add", response_class=JSONResponse)
+async def add_knowledge(
+    content: str = Form(..., description="Educational content to add"),
+    category: str = Form(..., description="Category (science, history, math, etc.)"),
+    topic: str = Form(..., description="Topic name"),
+    age_group: str = Form("6-12", description="Age group (6-8, 9-12, 6-12)")
+):
+    """Add new knowledge to the RAG system."""
+    success = rag_system.add_knowledge(content, category, topic, age_group)
+    if success:
+        return {"message": "Knowledge added successfully", "topic": topic, "category": category}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to add knowledge")
+
+@app.get("/rag/search", response_class=JSONResponse)
+async def search_knowledge(query: str):
+    """Search the RAG knowledge base."""
+    contexts = rag_system.retrieve_relevant_context(query)
+    return {
+        "query": query,
+        "results": contexts,
+        "total_results": len(contexts)
+    }
