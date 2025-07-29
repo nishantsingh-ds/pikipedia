@@ -170,12 +170,8 @@ function addButtonListeners() {
   const buttonSelectors = [
     'button[data-e2e-locator="console-run-button"]',
     'button[data-e2e-locator="console-submit-button"]',
-    'button:contains("Run")',
-    'button:contains("Submit")',
     '[data-cy="run-code-btn"]',
-    '[data-cy="submit-code-btn"]',
-    'button[class*="run"]',
-    'button[class*="submit"]'
+    '[data-cy="submit-code-btn"]'
   ];
   
   buttonSelectors.forEach(selector => {

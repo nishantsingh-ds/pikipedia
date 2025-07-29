@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: wonderbot
+    name: leetcode-ai-coach-api
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: OPENAI_API_KEY
         sync: false 

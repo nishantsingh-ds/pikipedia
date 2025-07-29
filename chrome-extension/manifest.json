@@ -26,13 +26,6 @@
     }
   ],
   
-  "web_accessible_resources": [
-    {
-      "resources": ["feedback-panel.html"],
-      "matches": ["https://leetcode.com/*"]
-    }
-  ],
-  
   "action": {
     "default_popup": "popup.html",
     "default_title": "LeetCode AI Coach"

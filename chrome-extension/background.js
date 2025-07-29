@@ -1,9 +1,8 @@
 // LeetCode AI Coach - Background Script (Service Worker)
 console.log('LeetCode AI Coach background script loaded');
 
-// Configuration
-const API_BASE_URL = 'https://your-api-url.com'; // Replace with your deployed backend URL
-// For local development, use: const API_BASE_URL = 'http://localhost:8000';
+// Configuration - Update this to your deployed backend URL
+const API_BASE_URL = 'http://localhost:8000'; // Change to your deployed backend URL
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -54,25 +53,9 @@ async function handleAnalyzeRequest(data, sendResponse) {
 // Extension installation/update handler
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('LeetCode AI Coach installed/updated:', details.reason);
-  
-  if (details.reason === 'install') {
-    // Show welcome notification
-    chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'icon.png',
-      title: 'LeetCode AI Coach',
-      message: 'Extension installed! Navigate to any LeetCode problem to start getting AI coaching.'
-    });
-  }
-});
-
-// Handle extension startup
-chrome.runtime.onStartup.addListener(() => {
-  console.log('LeetCode AI Coach started');
 });
 
 // Keep service worker alive (manifest v3 requirement)
 chrome.runtime.onMessage.addListener(() => {
-  // This listener keeps the service worker alive
   return true;
 });
