@@ -1,11 +1,8 @@
-# WonderBot - AI-Powered Educational Web App + LeetCode AI Coach
+# WonderBot - AI-Powered Educational Web App for Kids
 
-WonderBot is an intelligent educational application that uses AI agents to explain topics and analyze images in a kid-friendly way. This repository also includes a **LeetCode AI Coach Chrome Extension** that provides real-time coaching feedback on coding problems.
+WonderBot is an intelligent educational application that uses AI agents to explain topics and analyze images in a kid-friendly way. Built with FastAPI, CrewAI, and OpenAI, it provides multimodal responses including text explanations, visual diagrams, and audio narration.
 
-## 🎯 What's Included
-
-1. **WonderBot**: AI-powered educational web app for kids
-2. **LeetCode AI Coach**: Chrome extension for coding interview prep
+> **Note**: This repository also contains a separate **LeetCode AI Coach** project in the `leetcode-ai-coach/` directory. These are two completely independent projects.
 
 ## 🌟 WonderBot Features
 
@@ -18,13 +15,7 @@ WonderBot is an intelligent educational application that uses AI agents to expla
 - **Fast Path**: Quick responses for simple questions to reduce latency
 - **Caching**: In-memory caching for improved performance
 
-## 🤖 LeetCode AI Coach Features
 
-- **Real-time Analysis**: Automatically analyzes code when you click "Run" or "Submit"
-- **Smart Feedback**: Identifies algorithmic approach, conceptual gaps, and optimization tips
-- **Problem Recommendations**: Suggests 5 similar LeetCode problems to practice
-- **Non-intrusive UI**: Floating panel that doesn't interfere with LeetCode's interface
-- **Works Everywhere**: Compatible with all LeetCode problem pages
 
 ## 🚀 Quick Start
 
@@ -60,35 +51,7 @@ OPENAI_API_KEY=your_openai_api_key_here
    - Web interface: http://localhost:8000
    - API documentation: http://localhost:8000/docs
 
-## 🔧 LeetCode AI Coach Setup
 
-### Backend Setup (Same as above)
-The Chrome extension uses the same FastAPI backend. Follow steps 1-4 above.
-
-### Chrome Extension Installation
-
-1. **Open Chrome Extensions**
-   ```
-   Navigate to chrome://extensions/
-   ```
-
-2. **Enable Developer Mode**
-   Toggle "Developer mode" in the top right
-
-3. **Load the Extension**
-   - Click "Load unpacked"
-   - Select the `chrome-extension` folder from this project
-
-4. **Configure Backend URL**
-   - Open `chrome-extension/background.js`
-   - Update `API_BASE_URL` to your deployed backend or `http://localhost:8000`
-
-5. **Test on LeetCode**
-   - Go to any LeetCode problem
-   - Write a solution and click "Run" or "Submit"
-   - See AI feedback appear in a floating panel!
-
-For detailed installation instructions, see [`chrome-extension/README.md`](chrome-extension/README.md).
 
 ## 🏗️ Project Structure
 
@@ -122,17 +85,11 @@ wonderbot/
 │       │   └── __init__.py
 │       └── static/
 │           └── index.html         # Frontend web interface
-├── chrome-extension/              # 🆕 LeetCode AI Coach Chrome Extension
-│   ├── manifest.json             # Extension configuration
-│   ├── content.js                # Code extraction & UI injection
-│   ├── background.js             # API communication
-│   ├── styles.css                # Floating panel styles
-│   ├── popup.html                # Extension popup
-│   └── README.md                 # Extension setup guide
+
 ├── uploaded_images/               # Generated diagrams and audio
 ├── pyproject.toml                 # Project configuration
 ├── requirements.txt               # Python dependencies
-├── .env.example                  # 🆕 Environment configuration template
+
 ├── Procfile                      # Deployment configuration
 ├── runtime.txt                   # Python version specification
 ├── .gitignore                    # Git ignore rules
