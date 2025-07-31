@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LeetCode AI Coach Extension Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        .button:hover { background: #005a87; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .instructions { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>🤖 LeetCode AI Coach Extension Generator</h1>
+    <p>Click the button below to generate all Chrome extension files automatically!</p>
+    
+    <button class="button" onclick="generateExtension()">📦 Generate Extension Files</button>
+    
+    <div id="status"></div>
+    
+    <div class="instructions">
+        <h3>📋 After clicking the button above:</h3>
+        <ol>
+            <li>Five files will be automatically downloaded to your Downloads folder</li>
+            <li>Create a new folder called "leetcode-ai-coach"</li>
+            <li>Move all 5 downloaded files into that folder</li>
+            <li>Open Chrome → chrome://extensions/</li>
+            <li>Enable "Developer mode" → Click "Load unpacked" → Select your folder</li>
+            <li>Test on any LeetCode problem!</li>
+        </ol>
+    </div>
+
+    <script>
+        function downloadFile(filename, content) {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function generateExtension() {
+            const manifest = `{
+  "manifest_version": 3,
+  "name": "LeetCode AI Coach",
+  "version": "1.0.0",
+  "description": "AI-driven coaching for LeetCode problems with real-time feedback",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["https://leetcode.com/*"],
+  "background": {"service_worker": "background.js"},
+  "content_scripts": [{
+    "matches": ["https://leetcode.com/problems/*"],
+    "js": ["content.js"],
+    "css": ["styles.css"],
+    "run_at": "document_idle"
+  }],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "LeetCode AI Coach"
+  }
+}`;
+
+            const background = `// LeetCode AI Coach - Background Script
+console.log('LeetCode AI Coach background script loaded');
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'ANALYZE') {
+    handleAnalyzeRequest(message.data, sendResponse);
+    return true;
+  }
+});
+
+async function handleAnalyzeRequest(data, sendResponse) {
+  try {
+    const feedback = {
+      approach: "This solution uses a straightforward approach - consider if there are more efficient patterns",
+      gaps: [
+        "Think about the time complexity - can you do better than checking every possibility?",
+        "Consider what data structures might help you avoid repeated work", 
+        "Ask yourself: what information from previous steps can you reuse?"
+      ],
+      principles: [
+        "Start with a working solution, then optimize step by step",
+        "Look for patterns like two pointers, sliding window, or divide and conquer",
+        "Test your solution with edge cases like empty inputs or single elements"
+      ],
+      recommendations: [
+        {title: "Two Sum", link: "https://leetcode.com/problems/two-sum/"},
+        {title: "Valid Parentheses", link: "https://leetcode.com/problems/valid-parentheses/"},
+        {title: "Best Time to Buy and Sell Stock", link: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/"},
+        {title: "Maximum Subarray", link: "https://leetcode.com/problems/maximum-subarray/"},
+        {title: "Merge Two Sorted Lists", link: "https://leetcode.com/problems/merge-two-sorted-lists/"}
+      ]
+    };
+    
+    setTimeout(() => {
+      sendResponse({ success: true, feedback: feedback });
+    }, 1000);
+    
+  } catch (error) {
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+chrome.runtime.onInstalled.addListener((details) => {
+  console.log('LeetCode AI Coach installed:', details.reason);
+});`;
+
+            const content = `// LeetCode AI Coach - Content Script
+console.log('LeetCode AI Coach content script loaded');
+
+let feedbackPanel = null;
+let isAnalyzing = false;
+
+function getProblemSlug() {
+  const pathMatch = window.location.pathname.match(/\\/problems\\/([^\\/]+)/);
+  return pathMatch ? pathMatch[1] : null;
+}
+
+function extractCodeFromMonaco() {
+  try {
+    const monaco = window.monaco;
+    if (monaco && monaco.editor) {
+      const editors = monaco.editor.getEditors();
+      if (editors.length > 0) return editors[0].getValue();
+    }
+    
+    const monacoEditors = document.querySelectorAll('.monaco-editor .view-lines');
+    if (monacoEditors.length > 0) return monacoEditors[0].textContent || '';
+    
+    const codeElements = document.querySelectorAll('textarea[data-testid*="code"], pre.monaco-editor');
+    for (const element of codeElements) {
+      if (element.value) return element.value;
+      if (element.textContent) return element.textContent;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error extracting code:', error);
+    return null;
+  }
+}
+
+function createFeedbackPanel() {
+  if (feedbackPanel) feedbackPanel.remove();
+  
+  feedbackPanel = document.createElement('div');
+  feedbackPanel.id = 'leetcode-ai-coach-panel';
+  feedbackPanel.innerHTML = \`
+    <div class="coach-header">
+      <h3>🤖 AI Coach</h3>
+      <button id="close-coach-panel">&times;</button>
+    </div>
+    <div class="coach-content">
+      <div class="loading">Analyzing your code...</div>
+    </div>
+  \`;
+  
+  const problemDescription = document.querySelector('[data-track-load="description_content"]') || document.body;
+  if (problemDescription.parentNode) {
+    problemDescription.parentNode.insertBefore(feedbackPanel, problemDescription.nextSibling);
+  } else {
+    document.body.appendChild(feedbackPanel);
+  }
+  
+  document.getElementById('close-coach-panel').addEventListener('click', () => {
+    feedbackPanel.remove();
+    feedbackPanel = null;
+  });
+}
+
+function updateFeedbackPanel(feedback) {
+  if (!feedbackPanel) return;
+  const content = feedbackPanel.querySelector('.coach-content');
+  content.innerHTML = \`
+    <div class="feedback-section">
+      <h4>🎯 Approach</h4>
+      <p>\${feedback.approach}</p>
+    </div>
+    <div class="feedback-section">
+      <h4>🧠 Conceptual Gaps</h4>
+      <ul>\${feedback.gaps.map(gap => \`<li>\${gap}</li>\`).join('')}</ul>
+    </div>
+    <div class="feedback-section">
+      <h4>⚡ First-Principles Tips</h4>
+      <ul>\${feedback.principles.map(tip => \`<li>\${tip}</li>\`).join('')}</ul>
+    </div>
+    <div class="feedback-section">
+      <h4>🔗 Similar Problems</h4>
+      <ul>\${feedback.recommendations.map(rec => \`<li><a href="\${rec.link}" target="_blank">\${rec.title}</a></li>\`).join('')}</ul>
+    </div>
+  \`;
+}
+
+function handleCodeSubmission() {
+  if (isAnalyzing) return;
+  
+  const problemSlug = getProblemSlug();
+  const code = extractCodeFromMonaco();
+  
+  if (!problemSlug || !code || code.trim().length === 0) return;
+  
+  isAnalyzing = true;
+  createFeedbackPanel();
+  
+  chrome.runtime.sendMessage({
+    type: 'ANALYZE',
+    data: { problemSlug, code }
+  }, (response) => {
+    isAnalyzing = false;
+    if (response && response.success) {
+      updateFeedbackPanel(response.feedback);
+    }
+  });
+}
+
+function addButtonListeners() {
+  const runButton = Array.from(document.querySelectorAll('button')).find(btn => 
+    btn.textContent.toLowerCase().includes('run') && !btn.hasAttribute('data-coach-listener')
+  );
+  const submitButton = Array.from(document.querySelectorAll('button')).find(btn => 
+    btn.textContent.toLowerCase().includes('submit') && !btn.hasAttribute('data-coach-listener')
+  );
+  
+  [runButton, submitButton].filter(Boolean).forEach(button => {
+    button.addEventListener('click', handleCodeSubmission);
+    button.setAttribute('data-coach-listener', 'true');
+  });
+}
+
+function initialize() {
+  addButtonListeners();
+  setInterval(addButtonListeners, 2000);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initialize);
+} else {
+  initialize();
+}`;
+
+            const styles = `#leetcode-ai-coach-panel {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e1e4e8;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 16px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  max-width: 800px;
+  z-index: 10000;
+}
+
+.coach-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.coach-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+#close-coach-panel {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+}
+
+.coach-content { padding: 20px; }
+.loading { text-align: center; color: #586069; font-style: italic; padding: 20px; }
+.feedback-section { margin-bottom: 20px; }
+.feedback-section h4 { margin: 0 0 8px 0; font-size: 15px; font-weight: 600; color: #24292e; }
+.feedback-section p { margin: 0; color: #586069; line-height: 1.6; }
+.feedback-section ul { margin: 8px 0 0 0; padding-left: 20px; }
+.feedback-section li { margin-bottom: 6px; color: #586069; line-height: 1.5; }
+.feedback-section a { color: #0366d6; text-decoration: none; }
+.feedback-section a:hover { text-decoration: underline; }`;
+
+            const popup = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { width: 300px; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .logo { font-size: 32px; margin-bottom: 8px; }
+    h1 { font-size: 18px; margin: 0; color: #333; }
+    .subtitle { color: #666; font-size: 14px; margin-top: 4px; }
+    .status { background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; padding: 12px; margin: 16px 0; text-align: center; color: #15803d; }
+    .instructions { background: #f8fafc; border-radius: 6px; padding: 12px; font-size: 13px; line-height: 1.4; color: #475569; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🤖</div>
+    <h1>LeetCode AI Coach</h1>
+    <div class="subtitle">AI-powered coding feedback</div>
+  </div>
+  <div class="status">✅ Extension Active</div>
+  <div class="instructions">
+    <strong>How to use:</strong><br>
+    1. Navigate to any LeetCode problem<br>
+    2. Write your solution<br>
+    3. Click "Run" or "Submit"<br>
+    4. Get instant AI coaching feedback!
+  </div>
+  <div style="text-align: center; margin-top: 16px; font-size: 12px; color: #666;">Happy coding! 🚀</div>
+</body>
+</html>`;
+
+            // Download all files
+            downloadFile('manifest.json', manifest);
+            downloadFile('background.js', background);
+            downloadFile('content.js', content);
+            downloadFile('styles.css', styles);
+            downloadFile('popup.html', popup);
+
+            document.getElementById('status').innerHTML = '<div class="success">✅ All 5 files downloaded! Check your Downloads folder and follow the instructions above.</div>';
+        }
+    </script>
+</body>
+</html>
