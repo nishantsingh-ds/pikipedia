@@ -2,7 +2,9 @@
 
 WonderBot is an intelligent educational application that uses AI agents to explain topics and analyze images in a kid-friendly way. Built with FastAPI, CrewAI, and OpenAI, it provides multimodal responses including text explanations, visual diagrams, and audio narration.
 
-## 🌟 Features
+> **Note**: This repository also contains a separate **LeetCode AI Coach** project in the `leetcode-ai-coach/` directory. These are two completely independent projects.
+
+## 🌟 WonderBot Features
 
 - **Multi-Agent AI Collaboration**: Uses CrewAI agents (Researcher, Validator, Analogy, Presenter) for comprehensive explanations
 - **Image Analysis**: Upload images and get kid-friendly explanations using OpenAI's GPT-4 Vision
@@ -12,6 +14,8 @@ WonderBot is an intelligent educational application that uses AI agents to expla
 - **Personalization**: Specify age and interests for tailored explanations
 - **Fast Path**: Quick responses for simple questions to reduce latency
 - **Caching**: In-memory caching for improved performance
+
+
 
 ## 🚀 Quick Start
 
@@ -47,6 +51,8 @@ OPENAI_API_KEY=your_openai_api_key_here
    - Web interface: http://localhost:8000
    - API documentation: http://localhost:8000/docs
 
+
+
 ## 🏗️ Project Structure
 
 ```
@@ -56,6 +62,12 @@ wonderbot/
 │       ├── __init__.py
 │       ├── api.py                 # Main FastAPI application
 │       ├── crew.py                # CrewAI agents and tasks
+│       ├── routers/
+│       │   ├── __init__.py
+│       │   ├── auth_router.py     # Authentication endpoints
+│       │   ├── quiz_router.py     # Quiz functionality
+│       │   ├── session_router.py  # Session management
+│       │   └── leetcode_coach.py  # 🆕 LeetCode AI coaching API
 │       ├── agents/
 │       │   ├── __init__.py
 │       │   ├── image_analyzer.py  # Image analysis agent
@@ -73,9 +85,11 @@ wonderbot/
 │       │   └── __init__.py
 │       └── static/
 │           └── index.html         # Frontend web interface
+
 ├── uploaded_images/               # Generated diagrams and audio
 ├── pyproject.toml                 # Project configuration
 ├── requirements.txt               # Python dependencies
+
 ├── Procfile                      # Deployment configuration
 ├── runtime.txt                   # Python version specification
 ├── .gitignore                    # Git ignore rules

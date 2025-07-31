@@ -31,7 +31,7 @@ from .crew import KidSafeAppCrew
 from .models import *
 from .auth import get_current_user, register_user, login_user
 from .quiz_generator import generate_quiz_from_explanation, save_quiz_to_memory, get_quiz_by_id, submit_quiz_attempt
-from .routers import auth_router, quiz_router, session_router
+from .routers import auth_router, quiz_router, session_router, leetcode_coach
 from openai import OpenAI
 import base64
 from .rag_system import rag_system
@@ -86,6 +86,7 @@ security = HTTPBearer()
 app.include_router(auth_router.router)
 app.include_router(quiz_router.router)
 app.include_router(session_router.router)
+app.include_router(leetcode_coach.router)
 
 # ——— Learning Progress Endpoints ———
 
